@@ -1,0 +1,613 @@
+/* 
+ * Team Management Styles
+ * Beautiful, Responsive Design with Animations
+ */
+
+/* Team Table Styles */
+.team-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.team-table th {
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-gray-600);
+    padding: 16px 12px;
+    border-bottom: 2px solid var(--color-gray-200);
+    white-space: nowrap;
+    position: relative;
+}
+
+.team-table th::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 2px;
+    background-color: var(--color-black);
+    transform: scaleX(0);
+    transition: transform var(--transition-normal);
+}
+
+.team-table th:hover::after {
+    transform: scaleX(1);
+}
+
+.team-table td {
+    padding: 16px 12px;
+    border-bottom: 1px solid var(--color-gray-200);
+    vertical-align: middle;
+    transition: all var(--transition-fast);
+}
+
+.team-row:hover td {
+    background-color: var(--color-gray-50);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Avatar Cell */
+.avatar-cell {
+    width: 60px;
+    padding-right: 0 !important;
+}
+
+.user-avatar-small {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    background-color: var(--color-gray-100);
+    transition: all var(--transition-fast);
+    border: 2px solid var(--color-white);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.user-avatar-small img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-normal);
+}
+
+.user-avatar-small:hover {
+    transform: scale(1.1);
+    border-color: var(--color-gray-300);
+}
+
+.user-avatar-small:hover img {
+    transform: scale(1.2);
+}
+
+/* Name Cell */
+.name-cell {
+    min-width: 200px;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.user-name {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.user-name a {
+    color: var(--color-black);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+    display: inline-block;
+    transform: translateX(0);
+}
+
+.user-name a:hover {
+    color: var(--color-gray-700);
+    transform: translateX(2px);
+}
+
+.user-username {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--color-gray-600);
+}
+
+/* Role Cell */
+.role-cell {
+    width: 120px;
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: var(--radius-full);
+    text-transform: capitalize;
+    letter-spacing: 0.5px;
+    transition: all var(--transition-fast);
+    transform-origin: center;
+}
+
+.role-badge:hover {
+    transform: scale(1.05);
+}
+
+/* Team Cell */
+.team-cell {
+    min-width: 150px;
+}
+
+.team-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background-color: var(--color-gray-100);
+    color: var(--color-gray-700);
+    border-radius: var(--radius-full);
+    margin: 2px;
+    border: 1px solid var(--color-gray-300);
+    transition: all var(--transition-fast);
+}
+
+.team-badge:hover {
+    background-color: var(--color-gray-200);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Status Cell */
+.status-cell {
+    width: 100px;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: var(--radius-full);
+    text-transform: capitalize;
+    letter-spacing: 0.5px;
+    transition: all var(--transition-fast);
+}
+
+.status-badge i {
+    font-size: 0.5rem;
+}
+
+.status-badge:hover {
+    transform: scale(1.05);
+}
+
+.status-active {
+    background-color: rgba(0, 200, 83, 0.1);
+    color: var(--color-success-dark);
+    box-shadow: 0 2px 4px rgba(0, 200, 83, 0.2);
+}
+
+.status-inactive {
+    background-color: rgba(255, 152, 0, 0.1);
+    color: var(--color-warning-dark);
+    box-shadow: 0 2px 4px rgba(255, 152, 0, 0.2);
+}
+
+.status-on_leave {
+    background-color: rgba(33, 150, 243, 0.1);
+    color: var(--color-info-dark);
+    box-shadow: 0 2px 4px rgba(33, 150, 243, 0.2);
+}
+
+/* Email Cell */
+.email-cell {
+    min-width: 180px;
+}
+
+.email-link {
+    color: var(--color-gray-700);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.email-link:hover {
+    color: var(--color-black);
+    text-decoration: underline;
+}
+
+/* Last Login Cell */
+.last-login-cell {
+    width: 120px;
+}
+
+.last-login-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.last-login-info small {
+    font-size: 0.75rem;
+    color: var(--color-gray-500);
+}
+
+/* Actions Cell */
+.actions-cell {
+    width: 160px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 6px;
+    opacity: 0.7;
+    transition: opacity var(--transition-fast);
+}
+
+.team-row:hover .action-buttons {
+    opacity: 1;
+}
+
+.btn-action {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-gray-100);
+    color: var(--color-gray-600);
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    position: relative;
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-action::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-5px);
+    padding: 6px 10px;
+    background-color: var(--color-black);
+    color: var(--color-white);
+    font-size: 0.75rem;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-fast);
+    z-index: var(--z-tooltip);
+    pointer-events: none;
+}
+
+.btn-action:hover::before {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-10px);
+}
+
+.btn-edit:hover {
+    background-color: rgba(33, 150, 243, 0.1);
+    color: var(--color-info);
+}
+
+.btn-team:hover {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: var(--color-success);
+}
+
+.btn-deactivate:hover {
+    background-color: rgba(255, 152, 0, 0.1);
+    color: var(--color-warning);
+}
+
+.btn-activate:hover {
+    background-color: rgba(0, 200, 83, 0.1);
+    color: var(--color-success);
+}
+
+.btn-reset-password:hover {
+    background-color: rgba(156, 39, 176, 0.1);
+    color: #9c27b0;
+}
+
+/* Form Grid for Add/Edit Forms */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.form-column {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.form-section {
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    padding: 25px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-gray-200);
+}
+
+.form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--color-black);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.form-section-title i {
+    color: var(--color-black);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-group-full {
+    grid-column: 1 / -1;
+}
+
+/* Checkbox and Radio Styles */
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+    margin: 0;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.checkbox-label {
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--color-gray-700);
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .team-table {
+        display: block;
+    }
+    
+    .team-table thead {
+        display: none;
+    }
+    
+    .team-table tbody,
+    .team-table tr,
+    .team-table td {
+        display: block;
+        width: 100%;
+    }
+    
+    .team-table tr {
+        margin-bottom: var(--space-md);
+        border: 1px solid var(--color-gray-200);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        padding: var(--space-md);
+        background-color: var(--color-white);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .team-table td {
+        padding: 12px 0;
+        border: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .team-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--color-gray-700);
+        font-size: 0.875rem;
+        margin-right: var(--space-md);
+    }
+    
+    .avatar-cell,
+    .name-cell,
+    .role-cell,
+    .team-cell,
+    .status-cell,
+    .email-cell,
+    .last-login-cell,
+    .actions-cell {
+        width: 100% !important;
+        display: flex !important;
+    }
+    
+    .action-buttons {
+        opacity: 1;
+        margin-left: auto;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .pagination {
+        flex-direction: column;
+        gap: var(--space-md);
+        text-align: center;
+    }
+    
+    .bulk-actions {
+        margin-top: var(--space-md);
+    }
+    
+    .modal-content {
+        margin: var(--space-md);
+    }
+    
+    .action-buttons {
+        gap: 4px;
+    }
+    
+    .btn-action {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .btn-action::before {
+        font-size: 0.625rem;
+        padding: 4px 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-md);
+    }
+    
+    .page-actions {
+        width: 100%;
+    }
+    
+    .team-info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .members-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Animations */
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+}
+
+/* Loading States */
+.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--color-gray-300);
+    border-top-color: var(--color-black);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Team Info Grid */
+.team-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.info-item {
+    background: var(--color-gray-50);
+    padding: 15px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-gray-200);
+}
+
+.info-item label {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--color-gray-600);
+    margin-bottom: 5px;
+}
+
+.info-item span {
+    font-weight: 600;
+    color: var(--color-black);
+}
