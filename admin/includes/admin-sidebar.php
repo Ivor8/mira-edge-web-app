@@ -93,10 +93,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <i class="fas fa-chevron-right group-arrow"></i>
             </div>
             <div class="nav-group-content">
-                <a href="/admin/modules/jobs/index.php" class="nav-subitem">Job Listings</a>
-                <a href="/admin/modules/jobs/add.php" class="nav-subitem">Add Listing</a>
-                <a href="/admin/modules/jobs/applications.php" class="nav-subitem">Applications</a>
-                <a href="/admin/modules/jobs/categories.php" class="nav-subitem">Categories</a>
+                <a href="/mira edge/admin/modules/jobs/index.php" class="nav-subitem">Job Listings</a>
+                <a href="/mira edge/admin/modules/jobs/add.php" class="nav-subitem">Add Listing</a>
+                <a href="/mira edge/admin/modules/jobs/applications.php" class="nav-subitem">Applications</a>
+                <a href="/mira edge/admin/modules/jobs/categories.php" class="nav-subitem">Categories</a>
             </div>
         </div>
         
@@ -110,10 +110,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <i class="fas fa-chevron-right group-arrow"></i>
             </div>
             <div class="nav-group-content">
-                <a href="/admin/modules/internal-projects/index.php" class="nav-subitem">All Projects</a>
-                <a href="/admin/modules/internal-projects/add.php" class="nav-subitem">New Project</a>
-                <a href="/admin/modules/internal-projects/tasks.php" class="nav-subitem">Tasks</a>
-                <a href="/admin/modules/internal-projects/milestones.php" class="nav-subitem">Milestones</a>
+                <a href="/mira edge/admin/modules/internal-projects/index.php" class="nav-subitem">All Projects</a>
+                <a href="/mira edge/admin/modules/internal-projects/add.php" class="nav-subitem">New Project</a>
+                <a href="/mira edge/admin/modules/internal-projects/tasks.php" class="nav-subitem">Tasks</a>
+                <a href="/mira edge/admin/modules/internal-projects/milestones.php" class="nav-subitem">Milestones</a>
             </div>
         </div>
         
@@ -127,10 +127,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <i class="fas fa-chevron-right group-arrow"></i>
             </div>
             <div class="nav-group-content">
-                <a href="/admin/modules/website/pages.php" class="nav-subitem">Pages</a>
-                <a href="/admin/modules/website/menu.php" class="nav-subitem">Menu</a>
-                <a href="/admin/modules/website/sliders.php" class="nav-subitem">Sliders</a>
-                <a href="/admin/modules/website/testimonials.php" class="nav-subitem">Testimonials</a>
+                <a href="/mira edge/admin/modules/website/pages.php" class="nav-subitem">Pages</a>
+                <a href="/mira edge/admin/modules/website/menu.php" class="nav-subitem">Menu</a>
+                <a href="/mira edge/admin/modules/website/sliders.php" class="nav-subitem">Sliders</a>
+                <a href="/mira edge/admin/modules/website/testimonials.php" class="nav-subitem">Testimonials</a>
             </div>
         </div>
         
@@ -144,12 +144,12 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <i class="fas fa-chevron-right group-arrow"></i>
             </div>
             <div class="nav-group-content">
-                <a href="/admin/modules/settings/general.php" class="nav-subitem">General</a>
-                <a href="/admin/modules/settings/seo.php" class="nav-subitem">SEO</a>
-                <a href="/admin/modules/settings/contact.php" class="nav-subitem">Contact</a>
-                <a href="/admin/modules/settings/social.php" class="nav-subitem">Social Media</a>
-                <a href="/admin/modules/settings/email.php" class="nav-subitem">Email</a>
-                <a href="/admin/modules/settings/backup.php" class="nav-subitem">Backup</a>
+                <a href="/mira edge/admin/modules/settings/general.php" class="nav-subitem">General</a>
+                <a href="/mira edge/admin/modules/settings/seo.php" class="nav-subitem">SEO</a>
+                <a href="/mira edge/admin/modules/settings/contact.php" class="nav-subitem">Contact</a>
+                <a href="/mira edge/admin/modules/settings/social.php" class="nav-subitem">Social Media</a>
+                <a href="/mira edge/admin/modules/settings/email.php" class="nav-subitem">Email</a>
+                <a href="/mira edge/admin/modules/settings/backup.php" class="nav-subitem">Backup</a>
             </div>
         </div>
         

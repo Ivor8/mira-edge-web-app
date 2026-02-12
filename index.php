@@ -172,7 +172,7 @@ if ($session->isLoggedIn()) {
                         </div>
                     </li>
                 <?php else: ?>
-                    <li><a href="login.php" class="nav-link btn btn-outline">Login</a></li>
+                    <li><a href="/mira edge/login.php" class="nav-link btn btn-outline">Login</a></li>
                 <?php endif; ?>
             </ul>
         </div>
