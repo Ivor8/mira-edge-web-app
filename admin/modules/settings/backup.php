@@ -10,6 +10,9 @@ require_once '../../../includes/functions/helpers.php';
 $session = new Session(); $auth = new Auth(); $db = Database::getInstance()->getConnection();
 if (!$session->isLoggedIn()) { $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI']; redirect(url('/login.php')); }
 if (!$session->isAdmin()) { $session->setFlash('error','Access denied.'); redirect(url('/')); }
+// get user details
+$user = $session->getUser();
+$user_id = $user['user_id'];
 
 $backups = [];
 $backup_dir = $_SERVER['DOCUMENT_ROOT'] . '/backups/';
@@ -74,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_backup'])) {
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Settings — Backup</title>
 <link rel="stylesheet" href="<?php echo url('../../../assets/css/admin.css'); ?>"></head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <body><?php include '../../includes/admin-header.php'; ?><div class="admin-container"><?php include '../../includes/admin-sidebar.php'; ?><main class="admin-main"><div class="page-header"><h1 class="page-title"><i class="fas fa-database"></i> Database Backup</h1></div>
 <?php if ($session->hasFlash()): ?><div class="flash-messages"><?php if ($session->hasFlash('success')):?><div class="alert alert-success"><?php echo e($session->getFlash('success')); ?><button class="alert-close">&times;</button></div><?php endif;?><?php if ($session->hasFlash('error')):?><div class="alert alert-error"><?php echo e($session->getFlash('error')); ?><button class="alert-close">&times;</button></div><?php endif;?></div><?php endif; ?>
 
@@ -93,4 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_backup'])) {
     </div>
 </div>
 
-</main></div></body></html>
+</main></div>
+<script src="<?php echo url('../../../assets/js/admin.js'); ?>"></script>
+</body>
+</html>

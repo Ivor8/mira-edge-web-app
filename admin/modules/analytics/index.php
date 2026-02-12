@@ -22,7 +22,10 @@ if (!$session->isAdmin()) {
     redirect(url('/'));
 }
 
+// get user details
 $user = $session->getUser();
+$user_id = $user['user_id'];
+
 
 // Date range filter
 $date_from = $_GET['from'] ?? date('Y-m-d', strtotime('-30 days'));
@@ -81,6 +84,7 @@ $recent_visits = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Analytics | Admin</title>
     <link rel="stylesheet" href="<?php echo url('../../../assets/css/admin.css'); ?>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .analytics-header {
@@ -313,7 +317,7 @@ $recent_visits = $stmt->fetchAll();
 
         </main>
     </div>
-
+    <script src="<?php echo url('../../../assets/js/admin.js'); ?>"></script>
     <script>
         // Daily traffic chart
         const dailyData = <?php echo json_encode($daily_visits); ?>;

@@ -11,9 +11,13 @@ require_once '../../../includes/functions/helpers.php';
 $session = new Session();
 $auth = new Auth();
 $db = Database::getInstance()->getConnection();
+$user = $session->getUser();
 
 if (!$session->isLoggedIn()) { $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI']; redirect(url('/login.php')); }
 if (!$session->isAdmin()) { $session->setFlash('error','Access denied.'); redirect(url('/')); }
+// get user details
+$user = $session->getUser();
+$user_id = $user['user_id'];
 
 // Ensure sliders table
 $db->exec("CREATE TABLE IF NOT EXISTS sliders (
@@ -84,7 +88,9 @@ $stmt = $db->query("SELECT * FROM sliders ORDER BY display_order"); $sliders = $
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sliders | Admin</title>
-<link rel="stylesheet" href="<?php echo url('../../../assets/css/admin.css'); ?>"></head>
+<link rel="stylesheet" href="<?php echo url('../../../assets/css/admin.css'); ?>">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
 <body>
 <?php include '../../includes/admin-header.php'; ?>
 <div class="admin-container">
@@ -121,5 +127,6 @@ $stmt = $db->query("SELECT * FROM sliders ORDER BY display_order"); $sliders = $
 
 </main>
 </div>
+<script src="<?php echo url('../../../assets/js/admin.js'); ?>"></script>
 </body>
 </html>

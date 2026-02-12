@@ -14,6 +14,9 @@ $db = Database::getInstance()->getConnection();
 
 if (!$session->isLoggedIn()) { $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI']; redirect(url('/login.php')); }
 if (!$session->getUserRole() !== null && !$session->isAdmin()) { $session->setFlash('error','Access denied.'); redirect(url('/')); }
+// get user details
+$user = $session->getUser();
+$user_id = $user['user_id'];
 
 // Keys we manage here
 $keys = [
@@ -55,6 +58,7 @@ foreach ($rows as $r) $current[$r['setting_key']] = $r['setting_value'];
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Settings — General</title>
     <link rel="stylesheet" href="<?php echo url('../../../assets/css/admin.css'); ?>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <?php include '../../includes/admin-header.php'; ?>
@@ -92,5 +96,6 @@ foreach ($rows as $r) $current[$r['setting_key']] = $r['setting_value'];
             </form>
         </main>
     </div>
+<script src="<?php echo url('../../../assets/js/admin.js'); ?>"></script>
 </body>
 </html>

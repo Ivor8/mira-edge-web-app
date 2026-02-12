@@ -11,6 +11,9 @@ require_once '../../../includes/functions/helpers.php';
 $session = new Session(); $auth = new Auth(); $db = Database::getInstance()->getConnection();
 if (!$session->isLoggedIn()) { $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI']; redirect(url('/login.php')); }
 if (!$session->isAdmin()) { $session->setFlash('error','Access denied.'); redirect(url('/')); }
+// get user details
+$user = $session->getUser();
+$user_id = $user['user_id'];
 
 // Manage social links in site_settings with keys social_facebook etc.
 $keys = ['social_facebook','social_twitter','social_linkedin','social_instagram','social_github'];
@@ -23,7 +26,12 @@ $stmt = $db->prepare("SELECT setting_key, setting_value FROM site_settings WHERE
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Settings — Social</title>
-<link rel="stylesheet" href="<?php echo url('../../../assets/css/admin.css'); ?>"></head>
+<link rel="stylesheet" href="<?php echo url('../../../assets/css/admin.css'); ?>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
 <body><?php include '../../includes/admin-header.php'; ?><div class="admin-container"><?php include '../../includes/admin-sidebar.php'; ?><main class="admin-main"><div class="page-header"><h1 class="page-title"><i class="fab fa-share-alt"></i> Social Links</h1></div>
 <?php if ($session->hasFlash()): ?><div class="flash-messages"><?php if ($session->hasFlash('success')):?><div class="alert alert-success"><?php echo e($session->getFlash('success')); ?><button class="alert-close">&times;</button></div><?php endif;?><?php if ($session->hasFlash('error')):?><div class="alert alert-error"><?php echo e($session->getFlash('error')); ?><button class="alert-close">&times;</button></div><?php endif;?></div><?php endif; ?>
-<form method="post"><label>Facebook</label><input type="url" name="social_facebook" value="<?php echo e($current['social_facebook'] ?? ''); ?>"><label>Twitter</label><input type="url" name="social_twitter" value="<?php echo e($current['social_twitter'] ?? ''); ?>"><label>LinkedIn</label><input type="url" name="social_linkedin" value="<?php echo e($current['social_linkedin'] ?? ''); ?>"><label>Instagram</label><input type="url" name="social_instagram" value="<?php echo e($current['social_instagram'] ?? ''); ?>"><label>GitHub</label><input type="url" name="social_github" value="<?php echo e($current['social_github'] ?? ''); ?>"><div style="margin-top:12px;"><button class="btn btn-primary" type="submit">Save</button></div></form></main></div></body></html>
+<form method="post"><label>Facebook</label><input type="url" name="social_facebook" value="<?php echo e($current['social_facebook'] ?? ''); ?>"><label>Twitter</label><input type="url" name="social_twitter" value="<?php echo e($current['social_twitter'] ?? ''); ?>"><label>LinkedIn</label><input type="url" name="social_linkedin" value="<?php echo e($current['social_linkedin'] ?? ''); ?>"><label>Instagram</label><input type="url" name="social_instagram" value="<?php echo e($current['social_instagram'] ?? ''); ?>"><label>GitHub</label><input type="url" name="social_github" value="<?php echo e($current['social_github'] ?? ''); ?>"><div style="margin-top:12px;"><button class="btn btn-primary" type="submit">Save</button></div></form></main></div>
+<script src="<?php echo url('../../../assets/js/admin.js'); ?>"></script>
+</body>
+</html>
