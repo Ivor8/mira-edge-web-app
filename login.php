@@ -15,7 +15,7 @@ $auth = new Auth();
 if ($session->isLoggedIn()) {
     $role = $session->getUserRole();
     if (in_array($role, ['super_admin', 'admin', 'team_leader'])) {
-        redirect('/mira edge/admin/index.php');
+        redirect('/admin/index.php');
     } elseif ($role === 'developer') {
         redirect('/developer/dashboard.php');
     } else {
@@ -49,9 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Redirect based on role
             if (in_array($role, ['super_admin', 'admin', 'team_leader'])) {
-                redirect('/mira edge/admin/index.php');
+                redirect('/admin/index.php');
             } elseif ($role === 'developer') {
-                redirect('/mira edge/developer/dashboard.php');
+                redirect ('/mira edge/developer/dashboard.php');
             } else {
                 redirect('/');
             }
@@ -70,7 +70,7 @@ $auth->checkRememberMe();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | Mira Edge Technologies</title>
-    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="<?php echo url('assets/css/main.css'); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {

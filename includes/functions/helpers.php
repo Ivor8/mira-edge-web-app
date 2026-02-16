@@ -12,15 +12,29 @@ $session = new Session();
 /**
  * Generate a URL for the application
  */
+// function url($path = '') {
+//     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+//     $host = $_SERVER['HTTP_HOST'];
+//     $basePath = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+    
+//     // Remove leading slash from path if present
+//     $path = ltrim($path, '/');
+    
+//     return $protocol . '://' . $host . $basePath . '/' . $path;
+// }
+
 function url($path = '') {
-    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $host = $_SERVER['HTTP_HOST'];
-    $basePath = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
-    
-    // Remove leading slash from path if present
+
+    // Detect project root folder automatically
+    $projectFolder = explode('/', trim($_SERVER['SCRIPT_NAME'], '/'))[0];
+
+    // Remove leading slash from path
     $path = ltrim($path, '/');
-    
-    return $protocol . '://' . $host . $basePath . '/' . $path;
+
+    return $protocol . '://' . $host . '/' . $projectFolder . '/' . $path;
 }
 
 /**

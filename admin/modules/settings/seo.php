@@ -35,10 +35,10 @@ $stmt->execute($keys); $rows = $stmt->fetchAll(); $current = []; foreach ($rows 
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Settings — SEO</title>
-<link rel="stylesheet" href="<?php echo url('../../../assets/css/admin.css'); ?>">    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></head>
+<link rel="stylesheet" href="<?php echo url('assets/css/admin.css'); ?>">    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></head>
 <body><?php include '../../includes/admin-header.php'; ?><div class="admin-container"><?php include '../../includes/admin-sidebar.php'; ?><main class="admin-main"><div class="page-header"><h1 class="page-title"><i class="fas fa-search"></i> SEO Settings</h1></div>
 <?php if ($session->hasFlash()): ?><div class="flash-messages"><?php if ($session->hasFlash('success')):?><div class="alert alert-success"><?php echo e($session->getFlash('success')); ?><button class="alert-close">&times;</button></div><?php endif;?><?php if ($session->hasFlash('error')):?><div class="alert alert-error"><?php echo e($session->getFlash('error')); ?><button class="alert-close">&times;</button></div><?php endif;?></div><?php endif; ?>
 <form method="post"><label>Default Meta Title</label><input type="text" name="default_meta_title" value="<?php echo e($current['default_meta_title'] ?? ''); ?>"><label>Default Meta Description</label><textarea name="default_meta_description" rows="4"><?php echo e($current['default_meta_description'] ?? ''); ?></textarea><label>Default Meta Keywords</label><input type="text" name="default_meta_keywords" value="<?php echo e($current['default_meta_keywords'] ?? ''); ?>"><div style="margin-top:12px;"><button class="btn btn-primary" type="submit">Save</button></div></form></main></div>
-<script src="<?php echo url('../../../assets/js/admin.js'); ?>"></script>
+<script src="<?php echo url('assets/js/admin.js'); ?>"></script>
 </body>
 </html>

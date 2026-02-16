@@ -21,6 +21,7 @@ if (!$session->isAdmin()) {
     $session->setFlash('error', 'Access denied. Admin privileges required.');
     redirect(url('/'));
 }
+$user = $session->getUser();
 
 $project_id = $_GET['project_id'] ?? null;
 if (!$project_id) {
@@ -34,7 +35,7 @@ if (!$project_id) {
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <title>Select Project | Tasks</title>
-        <link rel="stylesheet" href="<?php echo url('../../../assets/css/admin.css'); ?>">
+        <link rel="stylesheet" href="<?php echo url('assets/css/admin.css'); ?>">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     </head>
     <body>
@@ -44,14 +45,14 @@ if (!$project_id) {
             <main class="admin-main">
                 <div class="page-header">
                     <h1 class="page-title"><i class="fas fa-tasks"></i> Select Project</h1>
-                    <div class="page-actions"><a href="<?php echo url('/admin/modules/internal-projects/index.php'); ?>" class="btn btn-outline">Back</a></div>
+                    <div class="page-actions"><a href="<?php echo url('admin/modules/internal-projects/index.php'); ?>" class="btn btn-outline">Back</a></div>
                 </div>
 
                 <div class="form-section">
                     <h3>Choose a project to manage tasks</h3>
                     <ul class="project-list">
                         <?php foreach ($projects as $pr): ?>
-                            <li><a href="<?php echo url('/admin/modules/internal-projects/tasks.php?project_id=' . $pr['internal_project_id']); ?>"><?php echo e($pr['project_name']); ?> (<?php echo e($pr['project_code']); ?>)</a></li>
+                            <li><a href="<?php echo url('admin/modules/internal-projects/tasks.php?project_id=' . $pr['internal_project_id']); ?>"><?php echo e($pr['project_name']); ?> (<?php echo e($pr['project_code']); ?>)</a></li>
                         <?php endforeach; ?>
                     </ul>
                 </div>
@@ -125,7 +126,7 @@ $project = $stmt->fetch();
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Project Tasks | Admin</title>
-    <link rel="stylesheet" href="<?php echo url('../../../assets/css/admin.css'); ?>">
+    <link rel="stylesheet" href="<?php echo url('assets/css/admin.css'); ?>">
 </head>
 <body>
     <?php include '../../includes/admin-header.php'; ?>
@@ -190,5 +191,6 @@ $project = $stmt->fetch();
 
         </main>
     </div>
+         <script src="<?php echo url('assets/js/admin.js'); ?>"></script>
 </body>
 </html>

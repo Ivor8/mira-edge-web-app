@@ -1,0 +1,1806 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Generation Time: Feb 16, 2026 at 03:42 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `mira_edge_technologies`
+--
+
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `generate_order_number` (OUT `order_num` VARCHAR(50))   BEGIN
+    DECLARE prefix VARCHAR(10) DEFAULT 'MIRA-';
+    DECLARE year_str VARCHAR(4);
+    DECLARE seq_num INT;
+    
+    SET year_str = YEAR(CURDATE());
+    
+    -- Get next sequence number for this year
+    SELECT COALESCE(MAX(CAST(SUBSTRING(order_number, 12) AS UNSIGNED)), 0) + 1
+    INTO seq_num
+    FROM service_orders
+    WHERE order_number LIKE CONCAT(prefix, year_str, '-%');
+    
+    SET order_num = CONCAT(prefix, year_str, '-', LPAD(seq_num, 5, '0'));
+END$$
+
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `active_projects_view`
+-- (See below for the actual view)
+--
+CREATE TABLE `active_projects_view` (
+`internal_project_id` int(11)
+,`project_name` varchar(200)
+,`project_code` varchar(50)
+,`status` enum('planned','active','on_hold','completed','cancelled')
+,`priority` enum('low','medium','high','urgent')
+,`deadline` date
+,`team_name` varchar(100)
+,`project_lead` varchar(101)
+,`total_milestones` bigint(21)
+,`completed_milestones` decimal(22,0)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `activity_logs`
+--
+
+CREATE TABLE `activity_logs` (
+  `log_id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `activity_type` varchar(100) NOT NULL,
+  `description` text NOT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `blog_categories`
+--
+
+CREATE TABLE `blog_categories` (
+  `blog_category_id` int(11) NOT NULL,
+  `category_name` varchar(100) NOT NULL,
+  `slug` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `seo_title` varchar(255) DEFAULT NULL,
+  `seo_description` text DEFAULT NULL,
+  `display_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `blog_categories`
+--
+
+INSERT INTO `blog_categories` (`blog_category_id`, `category_name`, `slug`, `description`, `seo_title`, `seo_description`, `display_order`, `is_active`, `created_at`) VALUES
+(1, 'Technology', 'technology', 'Latest tech trends and updates', NULL, NULL, 0, 1, '2026-02-08 04:23:13'),
+(2, 'Web Development', 'web-development', 'Web development tutorials and tips', NULL, NULL, 0, 1, '2026-02-08 04:23:13'),
+(3, 'Digital Marketing', 'digital-marketing', 'Marketing strategies and insights', NULL, NULL, 0, 1, '2026-02-08 04:23:13'),
+(4, 'Company News', 'company-news', 'Updates from Mira Edge Technologies', NULL, NULL, 0, 1, '2026-02-08 04:23:13');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `blog_comments`
+--
+
+CREATE TABLE `blog_comments` (
+  `comment_id` int(11) NOT NULL,
+  `post_id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `website` varchar(255) DEFAULT NULL,
+  `comment` text NOT NULL,
+  `is_approved` tinyint(1) DEFAULT 0,
+  `is_spam` tinyint(1) DEFAULT 0,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `blog_posts`
+--
+
+CREATE TABLE `blog_posts` (
+  `post_id` int(11) NOT NULL,
+  `title` varchar(200) NOT NULL,
+  `slug` varchar(200) NOT NULL,
+  `excerpt` varchar(500) NOT NULL,
+  `content` longtext NOT NULL,
+  `blog_category_id` int(11) DEFAULT NULL,
+  `author_id` int(11) NOT NULL,
+  `featured_image` varchar(255) DEFAULT NULL,
+  `image_alt` varchar(255) DEFAULT NULL,
+  `status` enum('draft','published','archived') DEFAULT 'draft',
+  `published_at` datetime DEFAULT NULL,
+  `views_count` int(11) DEFAULT 0,
+  `share_count` int(11) DEFAULT 0,
+  `reading_time` int(11) DEFAULT NULL,
+  `is_featured` tinyint(1) DEFAULT 0,
+  `seo_title` varchar(255) DEFAULT NULL,
+  `seo_description` text DEFAULT NULL,
+  `seo_keywords` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `blog_post_tags`
+--
+
+CREATE TABLE `blog_post_tags` (
+  `post_tag_id` int(11) NOT NULL,
+  `post_id` int(11) NOT NULL,
+  `tag_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `blog_tags`
+--
+
+CREATE TABLE `blog_tags` (
+  `tag_id` int(11) NOT NULL,
+  `tag_name` varchar(50) NOT NULL,
+  `slug` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `contact_messages`
+--
+
+CREATE TABLE `contact_messages` (
+  `message_id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `subject` varchar(200) NOT NULL,
+  `message` text NOT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `replied_to` tinyint(1) DEFAULT 0,
+  `response_notes` text DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `received_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `internal_projects`
+--
+
+CREATE TABLE `internal_projects` (
+  `internal_project_id` int(11) NOT NULL,
+  `project_name` varchar(200) NOT NULL,
+  `project_code` varchar(50) NOT NULL,
+  `description` text NOT NULL,
+  `client_id` int(11) DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `deadline` date DEFAULT NULL,
+  `completed_date` date DEFAULT NULL,
+  `budget` decimal(15,2) DEFAULT NULL,
+  `currency` enum('XAF','USD','EUR') DEFAULT 'XAF',
+  `status` enum('planned','active','on_hold','completed','cancelled') DEFAULT 'planned',
+  `priority` enum('low','medium','high','urgent') DEFAULT 'medium',
+  `created_by` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `internal_projects`
+--
+
+INSERT INTO `internal_projects` (`internal_project_id`, `project_name`, `project_code`, `description`, `client_id`, `start_date`, `deadline`, `completed_date`, `budget`, `currency`, `status`, `priority`, `created_by`, `created_at`, `updated_at`) VALUES
+(2, 'test project', '002', 'yh big time', 3, '2026-02-11', '2026-02-11', NULL, 3000000.00, 'XAF', 'active', 'high', 5, '2026-02-10 19:57:47', '2026-02-15 02:43:19');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `job_applications`
+--
+
+CREATE TABLE `job_applications` (
+  `application_id` int(11) NOT NULL,
+  `job_id` int(11) NOT NULL,
+  `applicant_name` varchar(100) NOT NULL,
+  `applicant_email` varchar(100) NOT NULL,
+  `applicant_phone` varchar(20) DEFAULT NULL,
+  `cover_letter` text DEFAULT NULL,
+  `resume_path` varchar(255) DEFAULT NULL,
+  `portfolio_url` varchar(255) DEFAULT NULL,
+  `linkedin_url` varchar(255) DEFAULT NULL,
+  `application_status` enum('submitted','reviewed','shortlisted','interviewed','rejected','hired') DEFAULT 'submitted',
+  `applied_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `reviewed_by` int(11) DEFAULT NULL,
+  `reviewed_at` datetime DEFAULT NULL,
+  `notes` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `job_categories`
+--
+
+CREATE TABLE `job_categories` (
+  `job_category_id` int(11) NOT NULL,
+  `category_name` varchar(100) NOT NULL,
+  `slug` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `display_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `job_categories`
+--
+
+INSERT INTO `job_categories` (`job_category_id`, `category_name`, `slug`, `description`, `display_order`, `is_active`, `created_at`) VALUES
+(1, 'Development', 'development', 'Web and mobile development positions', 0, 1, '2026-02-08 04:23:13'),
+(2, 'Design', 'design', 'UI/UX and graphic design roles', 0, 1, '2026-02-08 04:23:13'),
+(3, 'Marketing', 'marketing', 'Digital marketing positions', 0, 1, '2026-02-08 04:23:13'),
+(4, 'Internship', 'internship', 'Internship opportunities for students', 0, 1, '2026-02-08 04:23:13');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `job_listings`
+--
+
+CREATE TABLE `job_listings` (
+  `job_id` int(11) NOT NULL,
+  `job_title` varchar(200) NOT NULL,
+  `slug` varchar(200) NOT NULL,
+  `job_category_id` int(11) DEFAULT NULL,
+  `job_type` enum('full_time','part_time','contract','internship','remote','hybrid') NOT NULL,
+  `location` varchar(100) DEFAULT 'Yaounde, Cameroon',
+  `short_description` varchar(500) NOT NULL,
+  `full_description` text NOT NULL,
+  `requirements` text NOT NULL,
+  `responsibilities` text NOT NULL,
+  `benefits` text DEFAULT NULL,
+  `salary_range` varchar(100) DEFAULT NULL,
+  `experience_level` enum('entry','mid','senior','executive') DEFAULT 'mid',
+  `vacancy_count` int(11) DEFAULT 1,
+  `application_deadline` date DEFAULT NULL,
+  `featured_image` varchar(255) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `is_featured` tinyint(1) DEFAULT 0,
+  `views_count` int(11) DEFAULT 0,
+  `seo_title` varchar(255) DEFAULT NULL,
+  `seo_description` text DEFAULT NULL,
+  `seo_keywords` text DEFAULT NULL,
+  `created_by` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `job_listings`
+--
+
+INSERT INTO `job_listings` (`job_id`, `job_title`, `slug`, `job_category_id`, `job_type`, `location`, `short_description`, `full_description`, `requirements`, `responsibilities`, `benefits`, `salary_range`, `experience_level`, `vacancy_count`, `application_deadline`, `featured_image`, `is_active`, `is_featured`, `views_count`, `seo_title`, `seo_description`, `seo_keywords`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 'Software Dev internships', 'software-dev-internship', 4, 'internship', 'Yaounde Cameroon', 'Internship oportunity at Mira Edge Technologies', 'Internship oportunity at Mira Edge Technologies', '', '', NULL, NULL, 'mid', 4, NULL, NULL, 1, 1, 0, NULL, NULL, NULL, 5, '2026-02-10 19:15:18', '2026-02-15 02:42:30'),
+(2, 'Software Dev internship oh', 'Software Dev internship', 4, 'full_time', 'Yaounde Cameroon', '7', 'hhhk', '', '', NULL, NULL, 'mid', 7, NULL, NULL, 1, 0, 0, NULL, NULL, NULL, 5, '2026-02-14 01:58:29', '2026-02-14 02:00:19');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `menu_items`
+--
+
+CREATE TABLE `menu_items` (
+  `menu_id` int(11) NOT NULL,
+  `title` varchar(150) NOT NULL,
+  `url` varchar(255) NOT NULL,
+  `parent_id` int(11) DEFAULT NULL,
+  `display_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `notifications`
+--
+
+CREATE TABLE `notifications` (
+  `notification_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `title` varchar(200) NOT NULL,
+  `message` text NOT NULL,
+  `notification_type` enum('task','project','order','application','system','message') DEFAULT 'system',
+  `related_id` int(11) DEFAULT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `package_features`
+--
+
+CREATE TABLE `package_features` (
+  `feature_id` int(11) NOT NULL,
+  `package_id` int(11) NOT NULL,
+  `feature_text` varchar(255) NOT NULL,
+  `is_included` tinyint(1) DEFAULT 1,
+  `display_order` int(11) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `package_features`
+--
+
+INSERT INTO `package_features` (`feature_id`, `package_id`, `feature_text`, `is_included`, `display_order`) VALUES
+(1, 1, 'Up to 50 products', 1, 1),
+(2, 1, 'Shopping cart functionality', 1, 2),
+(3, 1, 'Mobile responsive design', 1, 3),
+(4, 1, 'Basic payment gateway integration', 1, 4),
+(5, 1, 'Admin dashboard', 1, 5),
+(6, 1, 'Product management system', 1, 6),
+(7, 1, 'Order management system', 1, 7),
+(8, 1, 'Customer registration/login', 1, 8),
+(9, 1, 'SEO basic setup', 1, 9),
+(10, 1, '6 months technical support', 1, 10),
+(11, 1, 'Custom domain integration', 0, 11),
+(12, 1, 'Multi-language support', 0, 12),
+(13, 1, 'Advanced analytics dashboard', 0, 13),
+(14, 2, 'Up to 500 products', 1, 1),
+(15, 2, 'Advanced shopping cart', 1, 2),
+(16, 2, 'Premium responsive design', 1, 3),
+(17, 2, 'Multiple payment gateways', 1, 4),
+(18, 2, 'Advanced admin dashboard', 1, 5),
+(19, 2, 'Inventory management', 1, 6),
+(20, 2, 'Order tracking system', 1, 7),
+(21, 2, 'Customer loyalty program', 1, 8),
+(22, 2, 'Advanced SEO optimization', 1, 9),
+(23, 2, '12 months technical support', 1, 10),
+(24, 2, 'Custom domain integration', 1, 11),
+(25, 2, 'Multi-language support', 1, 12),
+(26, 2, 'Advanced analytics dashboard', 1, 13),
+(27, 2, 'Email marketing integration', 1, 14),
+(28, 2, 'Social media integration', 1, 15),
+(29, 6, '5 custom designed pages', 1, 1),
+(30, 6, 'Mobile responsive design', 1, 2),
+(31, 6, 'Contact form with email notification', 1, 3),
+(32, 6, 'Social media integration', 1, 4),
+(33, 6, 'Basic SEO setup', 1, 5),
+(34, 6, 'Google Maps integration', 1, 6),
+(35, 6, '3 months technical support', 1, 7),
+(36, 6, 'Basic content management system', 1, 8),
+(37, 6, 'Website analytics setup', 1, 9),
+(38, 6, 'Professional stock images', 1, 10),
+(39, 6, 'Custom domain setup', 0, 11),
+(40, 6, 'Blog functionality', 0, 12),
+(41, 6, 'E-commerce functionality', 0, 13);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pages`
+--
+
+CREATE TABLE `pages` (
+  `page_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `slug` varchar(255) NOT NULL,
+  `content` longtext DEFAULT NULL,
+  `status` enum('draft','published') DEFAULT 'draft',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `page_visits`
+--
+
+CREATE TABLE `page_visits` (
+  `visit_id` int(11) NOT NULL,
+  `page_url` varchar(500) NOT NULL,
+  `page_title` varchar(255) DEFAULT NULL,
+  `referrer_url` varchar(500) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `country` varchar(100) DEFAULT NULL,
+  `city` varchar(100) DEFAULT NULL,
+  `device_type` enum('desktop','mobile','tablet') DEFAULT NULL,
+  `browser` varchar(50) DEFAULT NULL,
+  `visited_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `password_resets`
+--
+
+CREATE TABLE `password_resets` (
+  `reset_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `expires_at` datetime NOT NULL,
+  `used` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `password_resets`
+--
+
+INSERT INTO `password_resets` (`reset_id`, `user_id`, `token`, `expires_at`, `used`, `created_at`) VALUES
+(1, 5, '89f5ef0bf22b48e71de833624d0308c6acbf692d2cd790478fd44dd539751766', '2026-03-10 17:37:01', 1, '2026-02-08 16:37:01'),
+(2, 5, '7a8745a859e0b4d141c3f51f2c7b57e0d9841ffba228484d24f2fe0ff08d675b', '2026-03-11 01:40:24', 1, '2026-02-09 00:40:24'),
+(3, 5, '37dcfd438383de03b898be51afebc2f90bf65b094c47d4e638e81b1a584c6d41', '2026-03-11 17:58:05', 1, '2026-02-09 16:58:05'),
+(4, 5, '914473827aa2e7f541d9ad0e1195f0ef438a81509bb583d5fa482a7d197fcabf', '2026-03-12 04:03:40', 1, '2026-02-10 03:03:40'),
+(5, 5, '0c9052a8c33a93e7616edc243ccdde800f5e28c99009a98f5f995caa9e63eca1', '2026-03-12 20:09:11', 1, '2026-02-10 19:09:11'),
+(6, 5, '344779cd0e444442ae35cf4be4c00c825785b9201848c3db1ea4ed115709cf29', '2026-03-14 12:48:18', 1, '2026-02-12 11:48:18'),
+(7, 5, '2cbe5c67d05754637a9e20139bbf4e348bdd7d35a26f1f833c13f01ce5545049', '2026-03-14 16:51:03', 1, '2026-02-12 15:51:03'),
+(8, 5, 'c8a50c40490759069189094c58a145004d5c6cac62b60b9841e0e3f75d0cc5b6', '2026-03-14 18:42:08', 1, '2026-02-12 17:42:08'),
+(9, 5, 'd636d33fdc19169e8bbfb1a8d786701e309b820ff51f26920ce250609c89a144', '2026-03-16 01:16:04', 1, '2026-02-14 00:16:04'),
+(10, 5, '0160fe3c74a6306d1990e2aeacfa07e9deeb0d680d7bfafe7f99a088ed8829df', '2026-03-16 12:12:38', 1, '2026-02-14 11:12:38'),
+(11, 5, '5dfd85775b48643210747581c2e29f4c238510d8ac37c6873e364a9ea4e01c45', '2026-03-17 02:45:54', 1, '2026-02-15 01:45:54'),
+(12, 5, 'ff27c0142f64e2e01d6cafd4bc5710adb9cc2c8cb9bba7c98a265cb56ed49ef3', '2026-03-18 03:03:06', 0, '2026-02-16 02:03:06');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `portfolio_categories`
+--
+
+CREATE TABLE `portfolio_categories` (
+  `category_id` int(11) NOT NULL,
+  `category_name` varchar(100) NOT NULL,
+  `slug` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `seo_title` varchar(255) DEFAULT NULL,
+  `seo_description` text DEFAULT NULL,
+  `seo_keywords` text DEFAULT NULL,
+  `display_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `portfolio_categories`
+--
+
+INSERT INTO `portfolio_categories` (`category_id`, `category_name`, `slug`, `description`, `seo_title`, `seo_description`, `seo_keywords`, `display_order`, `is_active`, `created_at`) VALUES
+(1, 'E-commerce', 'e-commerce', 'Online shopping platforms', NULL, NULL, NULL, 0, 1, '2026-02-08 04:23:13'),
+(2, 'Business Websites', 'business-websites', 'Corporate and business websites', NULL, NULL, NULL, 0, 1, '2026-02-08 04:23:13'),
+(3, 'Mobile Applications', 'mobile-applications', 'iOS and Android apps', NULL, NULL, NULL, 0, 1, '2026-02-08 04:23:13'),
+(4, 'Web Applications', 'web-applications', 'Complex web applications', NULL, NULL, NULL, 0, 1, '2026-02-08 04:23:13');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `portfolio_projects`
+--
+
+CREATE TABLE `portfolio_projects` (
+  `project_id` int(11) NOT NULL,
+  `title` varchar(200) NOT NULL,
+  `slug` varchar(200) NOT NULL,
+  `short_description` varchar(500) NOT NULL,
+  `full_description` text NOT NULL,
+  `client_name` varchar(100) DEFAULT NULL,
+  `client_logo` varchar(255) DEFAULT NULL,
+  `project_url` varchar(255) DEFAULT NULL,
+  `github_url` varchar(255) DEFAULT NULL,
+  `project_date` date DEFAULT NULL,
+  `completion_date` date DEFAULT NULL,
+  `category_id` int(11) DEFAULT NULL,
+  `featured_image` varchar(255) NOT NULL,
+  `status` enum('completed','ongoing','upcoming') DEFAULT 'completed',
+  `display_order` int(11) DEFAULT 0,
+  `views_count` int(11) DEFAULT 0,
+  `is_featured` tinyint(1) DEFAULT 0,
+  `seo_title` varchar(255) DEFAULT NULL,
+  `seo_description` text DEFAULT NULL,
+  `seo_keywords` text DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `portfolio_projects`
+--
+
+INSERT INTO `portfolio_projects` (`project_id`, `title`, `slug`, `short_description`, `full_description`, `client_name`, `client_logo`, `project_url`, `github_url`, `project_date`, `completion_date`, `category_id`, `featured_image`, `status`, `display_order`, `views_count`, `is_featured`, `seo_title`, `seo_description`, `seo_keywords`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 'SPOTFLI MOBILE APP', 'spotfli-mobile-app', 'SPOTFLI MOBILE APP', 'SPOTFLI MOBILE APP', 'Mr Pitu', NULL, 'https://www.project.com', 'https://www.project.com', '2026-02-08', '2026-02-10', 2, '/assets/uploads/projects/6988bdfd6e811_1770569213.jpeg', 'upcoming', 1, 0, 1, '', '', '', 5, '2026-02-08 16:46:53', '2026-02-08 16:46:53');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `project_files`
+--
+
+CREATE TABLE `project_files` (
+  `file_id` int(11) NOT NULL,
+  `internal_project_id` int(11) NOT NULL,
+  `task_id` int(11) DEFAULT NULL,
+  `uploaded_by` int(11) NOT NULL,
+  `file_name` varchar(255) NOT NULL,
+  `file_path` varchar(255) NOT NULL,
+  `file_type` varchar(50) DEFAULT NULL,
+  `file_size` int(11) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `uploaded_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `project_images`
+--
+
+CREATE TABLE `project_images` (
+  `image_id` int(11) NOT NULL,
+  `project_id` int(11) NOT NULL,
+  `image_url` varchar(255) NOT NULL,
+  `alt_text` varchar(255) DEFAULT NULL,
+  `display_order` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `project_images`
+--
+
+INSERT INTO `project_images` (`image_id`, `project_id`, `image_url`, `alt_text`, `display_order`, `created_at`) VALUES
+(1, 1, '/assets/uploads/projects/gallery/6988bdfd7096b_1770569213_0.jpeg', 'SPOTFLI MOBILE APP - Image 1', 0, '2026-02-08 16:46:53');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `project_milestones`
+--
+
+CREATE TABLE `project_milestones` (
+  `milestone_id` int(11) NOT NULL,
+  `internal_project_id` int(11) NOT NULL,
+  `milestone_name` varchar(200) NOT NULL,
+  `description` text DEFAULT NULL,
+  `due_date` date DEFAULT NULL,
+  `completed_date` date DEFAULT NULL,
+  `completion_percentage` int(11) DEFAULT 0,
+  `is_completed` tinyint(1) DEFAULT 0,
+  `display_order` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `project_milestones`
+--
+
+INSERT INTO `project_milestones` (`milestone_id`, `internal_project_id`, `milestone_name`, `description`, `due_date`, `completed_date`, `completion_percentage`, `is_completed`, `display_order`, `created_at`) VALUES
+(3, 2, 'Phase one', 'kj', '2026-02-14', NULL, 0, 0, 0, '2026-02-14 14:57:44');
+
+--
+-- Triggers `project_milestones`
+--
+DELIMITER $$
+CREATE TRIGGER `update_project_completion` AFTER UPDATE ON `project_milestones` FOR EACH ROW BEGIN
+    DECLARE total_milestones INT;
+    DECLARE completed_milestones INT;
+    DECLARE project_completion INT;
+    
+    IF NEW.is_completed != OLD.is_completed THEN
+        SELECT COUNT(*), SUM(CASE WHEN is_completed = 1 THEN 1 ELSE 0 END)
+        INTO total_milestones, completed_milestones
+        FROM project_milestones
+        WHERE internal_project_id = NEW.internal_project_id;
+        
+        IF total_milestones > 0 THEN
+            SET project_completion = ROUND((completed_milestones / total_milestones) * 100);
+            
+            -- Update main project if all milestones are completed
+            IF project_completion = 100 THEN
+                UPDATE internal_projects 
+                SET status = 'completed', completed_date = CURDATE()
+                WHERE internal_project_id = NEW.internal_project_id;
+            END IF;
+        END IF;
+    END IF;
+END
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `project_tasks`
+--
+
+CREATE TABLE `project_tasks` (
+  `task_id` int(11) NOT NULL,
+  `internal_project_id` int(11) NOT NULL,
+  `milestone_id` int(11) DEFAULT NULL,
+  `task_name` varchar(200) NOT NULL,
+  `description` text DEFAULT NULL,
+  `assigned_to` int(11) DEFAULT NULL,
+  `assigned_by` int(11) DEFAULT NULL,
+  `due_date` date DEFAULT NULL,
+  `completed_date` date DEFAULT NULL,
+  `status` enum('pending','in_progress','review','completed') DEFAULT 'pending',
+  `priority` enum('low','medium','high','urgent') DEFAULT 'medium',
+  `estimated_hours` int(11) DEFAULT NULL,
+  `actual_hours` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `project_tasks`
+--
+
+INSERT INTO `project_tasks` (`task_id`, `internal_project_id`, `milestone_id`, `task_name`, `description`, `assigned_to`, `assigned_by`, `due_date`, `completed_date`, `status`, `priority`, `estimated_hours`, `actual_hours`, `created_at`, `updated_at`) VALUES
+(1, 2, 3, 'vc', 'lkjhgfd', 5, 5, '2026-02-03', NULL, 'pending', 'medium', NULL, NULL, '2026-02-14 14:58:21', '2026-02-14 14:58:21');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `project_team_assignments`
+--
+
+CREATE TABLE `project_team_assignments` (
+  `assignment_id` int(11) NOT NULL,
+  `internal_project_id` int(11) NOT NULL,
+  `team_id` int(11) NOT NULL,
+  `assigned_date` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `project_technologies`
+--
+
+CREATE TABLE `project_technologies` (
+  `tech_id` int(11) NOT NULL,
+  `project_id` int(11) NOT NULL,
+  `technology_name` varchar(100) NOT NULL,
+  `icon_class` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `seo_metadata`
+--
+
+CREATE TABLE `seo_metadata` (
+  `seo_id` int(11) NOT NULL,
+  `page_type` enum('home','about','services','portfolio','blog','careers','contact','custom') NOT NULL,
+  `page_slug` varchar(100) DEFAULT NULL,
+  `page_title` varchar(255) DEFAULT NULL,
+  `meta_title` varchar(255) DEFAULT NULL,
+  `meta_description` text DEFAULT NULL,
+  `meta_keywords` text DEFAULT NULL,
+  `og_title` varchar(255) DEFAULT NULL,
+  `og_description` text DEFAULT NULL,
+  `og_image` varchar(255) DEFAULT NULL,
+  `canonical_url` varchar(255) DEFAULT NULL,
+  `structured_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`structured_data`)),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `services`
+--
+
+CREATE TABLE `services` (
+  `service_id` int(11) NOT NULL,
+  `service_name` varchar(200) NOT NULL,
+  `slug` varchar(200) NOT NULL,
+  `service_category_id` int(11) DEFAULT NULL,
+  `short_description` varchar(500) NOT NULL,
+  `full_description` text NOT NULL,
+  `base_price` decimal(10,2) DEFAULT NULL,
+  `featured_image` varchar(255) DEFAULT NULL,
+  `is_popular` tinyint(1) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1,
+  `display_order` int(11) DEFAULT 0,
+  `estimated_duration` varchar(50) DEFAULT NULL,
+  `seo_title` varchar(255) DEFAULT NULL,
+  `seo_description` text DEFAULT NULL,
+  `seo_keywords` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `services`
+--
+
+INSERT INTO `services` (`service_id`, `service_name`, `slug`, `service_category_id`, `short_description`, `full_description`, `base_price`, `featured_image`, `is_popular`, `is_active`, `display_order`, `estimated_duration`, `seo_title`, `seo_description`, `seo_keywords`, `created_at`, `updated_at`) VALUES
+(1, 'E-commerce Website Development', 'ecommerce-website-development', 1, 'Build a complete online store with shopping cart and payment integration', 'We develop fully functional e-commerce websites with product management, shopping cart, secure payment gateways, and admin dashboard. Our solutions are mobile-responsive and optimized for performance.', 250000.00, NULL, 1, 1, 1, '4-6 weeks', NULL, NULL, NULL, '2026-02-10 19:56:43', '2026-02-10 19:56:43'),
+(2, 'Mobile App Development', 'mobile-app-development', 2, 'Custom iOS and Android applications for your business', 'We create native and cross-platform mobile applications tailored to your specific needs. From concept to deployment, we handle the entire development lifecycle.', 500000.00, NULL, 1, 1, 2, '8-12 weeks', NULL, NULL, NULL, '2026-02-10 19:56:43', '2026-02-10 19:56:43'),
+(3, 'SEO Optimization Service', 'seo-optimization', 3, 'Improve your website search engine rankings', 'Comprehensive SEO service including keyword research, on-page optimization, technical SEO, and monthly reporting to help your website rank higher in search results.', 150000.00, NULL, 0, 1, 3, 'Ongoing', NULL, NULL, NULL, '2026-02-10 19:56:43', '2026-02-10 19:56:43'),
+(4, 'Business Website Package', 'business-website-package', 1, 'Professional website for small to medium businesses', 'A complete website solution including design, development, content creation, and basic SEO setup to establish your online presence.', 120000.00, NULL, 1, 1, 4, '2-3 weeks', NULL, NULL, NULL, '2026-02-10 19:56:43', '2026-02-10 19:56:43'),
+(5, 'Content writing', 'content-writing', 4, 'adfad', 'adf', 500000.00, '/assets/uploads/services/698fe46e14dea_1771037806.jpeg', 0, 1, 5, '2 weeks', 'C | Mira Edge Technologies', 'aadf', 'web developement, afordable web services,', '2026-02-14 02:56:46', '2026-02-14 02:56:46');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `service_categories`
+--
+
+CREATE TABLE `service_categories` (
+  `service_category_id` int(11) NOT NULL,
+  `category_name` varchar(100) NOT NULL,
+  `slug` varchar(100) NOT NULL,
+  `icon_class` varchar(100) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `display_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `service_categories`
+--
+
+INSERT INTO `service_categories` (`service_category_id`, `category_name`, `slug`, `icon_class`, `description`, `display_order`, `is_active`, `created_at`) VALUES
+(1, 'Web Development', 'web-development', 'fas fa-code', 'Custom websites and web applications', 0, 1, '2026-02-08 04:23:13'),
+(2, 'Mobile Apps', 'mobile-apps', 'fas fa-mobile-alt', 'iOS and Android applications', 0, 1, '2026-02-08 04:23:13'),
+(3, 'Digital Marketing', 'digital-marketing', 'fas fa-bullhorn', 'Online marketing and SEO services', 0, 1, '2026-02-08 04:23:13'),
+(4, 'Tech Solutions', 'tech-solutions', 'fas fa-cogs', 'Innovative technology solutions', 0, 1, '2026-02-08 04:23:13');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `service_orders`
+--
+
+CREATE TABLE `service_orders` (
+  `order_id` int(11) NOT NULL,
+  `order_number` varchar(50) NOT NULL,
+  `client_name` varchar(100) NOT NULL,
+  `client_email` varchar(100) NOT NULL,
+  `client_phone` varchar(20) DEFAULT NULL,
+  `client_company` varchar(100) DEFAULT NULL,
+  `service_id` int(11) NOT NULL,
+  `package_id` int(11) DEFAULT NULL,
+  `requirements` text DEFAULT NULL,
+  `budget` decimal(10,2) DEFAULT NULL,
+  `currency` enum('XAF','USD','EUR') DEFAULT 'XAF',
+  `payment_method` enum('mobile_money','orange_money','bank_transfer','paypal','credit_card','invoice') DEFAULT 'mobile_money',
+  `payment_status` enum('pending','partial','paid','cancelled') DEFAULT 'pending',
+  `order_status` enum('pending','in_review','approved','in_progress','completed','cancelled') DEFAULT 'pending',
+  `assigned_to` int(11) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `service_orders`
+--
+
+INSERT INTO `service_orders` (`order_id`, `order_number`, `client_name`, `client_email`, `client_phone`, `client_company`, `service_id`, `package_id`, `requirements`, `budget`, `currency`, `payment_method`, `payment_status`, `order_status`, `assigned_to`, `notes`, `created_at`, `updated_at`) VALUES
+(1, 'MIRA-2024-00001', 'Jean Kamga', 'jean.kamga@africantech.com', '+237 677 123 456', 'African Tech Solutions Ltd', 1, 2, 'We need an e-commerce website for selling electronics and tech accessories. Must support multiple payment methods (MTN Mobile Money, Orange Money, and credit cards). Need inventory management, customer reviews, and order tracking. The design should be modern and responsive.', 450000.00, 'XAF', 'mobile_money', 'partial', 'in_progress', NULL, 'Client has paid 50% deposit. Project assigned to web development team. Design mockups approved.', '2024-01-15 08:30:00', '2026-02-10 19:56:43'),
+(2, 'MIRA-2024-00002', 'Marie Chantal', 'marie@doualabakery.cm', '+237 699 987 654', 'Douala Artisan Bakery', 4, 6, 'Need a professional website to showcase our bakery products. Should include: Home page, About Us, Products/Gallery, Contact page with map. Must display well on mobile phones. Need French/English bilingual option if possible.', 120000.00, 'XAF', 'orange_money', 'paid', 'completed', NULL, 'Full payment received. Website delivered on time. Client satisfied with the result. Training provided on content management.', '2024-02-01 13:20:00', '2026-02-10 19:56:43'),
+(3, 'MIRA-2024-00003', 'Samuel Eto\'o', 'samuel@healthapp.cm', '+237 677 555 888', 'HealthTech Innovations', 2, 4, 'Need a health tracking mobile app for iOS and Android. Features should include: user registration, health metrics tracking, appointment scheduling, push notifications. Must be HIPAA compliant and secure.', 500000.00, 'XAF', 'bank_transfer', 'pending', 'pending', NULL, NULL, '2024-02-20 10:45:00', '2026-02-10 19:56:43');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `service_packages`
+--
+
+CREATE TABLE `service_packages` (
+  `package_id` int(11) NOT NULL,
+  `service_id` int(11) NOT NULL,
+  `package_name` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `currency` enum('XAF','USD','EUR') DEFAULT 'XAF',
+  `is_featured` tinyint(1) DEFAULT 0,
+  `display_order` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `service_packages`
+--
+
+INSERT INTO `service_packages` (`package_id`, `service_id`, `package_name`, `description`, `price`, `currency`, `is_featured`, `display_order`, `created_at`) VALUES
+(1, 1, 'Basic E-commerce', 'Essential features for starting an online store', 250000.00, 'XAF', 0, 1, '2026-02-10 19:56:43'),
+(2, 1, 'Advanced E-commerce', 'Full-featured online store with advanced capabilities', 450000.00, 'XAF', 1, 2, '2026-02-10 19:56:43'),
+(3, 1, 'Enterprise E-commerce', 'Custom solutions for large-scale online businesses', 800000.00, 'XAF', 0, 3, '2026-02-10 19:56:43'),
+(4, 2, 'Basic Mobile App', 'Simple mobile application with core features', 500000.00, 'XAF', 1, 1, '2026-02-10 19:56:43'),
+(5, 2, 'Advanced Mobile App', 'Feature-rich application with backend integration', 850000.00, 'XAF', 0, 2, '2026-02-10 19:56:43'),
+(6, 4, 'Starter Business Website', 'Professional 5-page website for small businesses', 120000.00, 'XAF', 1, 1, '2026-02-10 19:56:43');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `site_settings`
+--
+
+CREATE TABLE `site_settings` (
+  `setting_id` int(11) NOT NULL,
+  `setting_key` varchar(100) NOT NULL,
+  `setting_value` text DEFAULT NULL,
+  `setting_group` varchar(50) DEFAULT NULL,
+  `setting_type` enum('text','textarea','number','email','url','boolean','json') DEFAULT 'text',
+  `display_order` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `site_settings`
+--
+
+INSERT INTO `site_settings` (`setting_id`, `setting_key`, `setting_value`, `setting_group`, `setting_type`, `display_order`, `created_at`, `updated_at`) VALUES
+(1, 'company_name', 'Mira Edge Technologies', 'company', 'text', 0, '2026-02-08 04:23:13', '2026-02-08 04:23:13'),
+(2, 'company_email', 'contact@miraedgetech.com', 'company', 'text', 0, '2026-02-08 04:23:13', '2026-02-08 04:23:13'),
+(3, 'company_phone', '+237 6XX XXX XXX', 'company', 'text', 0, '2026-02-08 04:23:13', '2026-02-08 04:23:13'),
+(4, 'company_address', 'Yaounde, Cameroon', 'company', 'text', 0, '2026-02-08 04:23:13', '2026-02-08 04:23:13'),
+(5, 'company_about', 'Leading tech solutions provider in Cameroon and Africa', 'company', 'text', 0, '2026-02-08 04:23:13', '2026-02-08 04:23:13'),
+(6, 'contact_email', 'contact@miraedgetech.com', 'contact', 'text', 0, '2026-02-08 04:23:13', '2026-02-08 04:23:13'),
+(7, 'contact_phone', '+237 6XX XXX XXX', 'contact', 'text', 0, '2026-02-08 04:23:13', '2026-02-08 04:23:13'),
+(8, 'whatsapp_number', '+237 6XX XXX XXX', 'contact', 'text', 0, '2026-02-08 04:23:13', '2026-02-08 04:23:13'),
+(9, 'working_hours', 'Mon-Fri: 8AM-6PM, Sat: 9AM-1PM', 'contact', 'text', 0, '2026-02-08 04:23:13', '2026-02-08 04:23:13'),
+(10, 'default_meta_title', 'Mira Edge Technologies | Web & Mobile Development Cameroon', 'seo', 'text', 0, '2026-02-08 04:23:13', '2026-02-08 04:23:13'),
+(11, 'default_meta_description', 'Leading tech company in Cameroon offering web development, mobile apps, digital marketing and innovative tech solutions across Africa.', 'seo', 'text', 0, '2026-02-08 04:23:13', '2026-02-08 04:23:13'),
+(12, 'default_meta_keywords', 'web development Cameroon, mobile app development, digital marketing Cameroon, tech solutions Africa', 'seo', 'text', 0, '2026-02-08 04:23:13', '2026-02-08 04:23:13'),
+(13, 'social_facebook', 'https://www.facebook.com', 'social', 'text', 0, '2026-02-10 21:16:17', '2026-02-10 21:16:17'),
+(14, 'social_twitter', '', 'social', 'text', 0, '2026-02-10 21:16:17', '2026-02-10 21:16:17'),
+(15, 'social_linkedin', '', 'social', 'text', 0, '2026-02-10 21:16:17', '2026-02-10 21:16:17'),
+(16, 'social_instagram', '', 'social', 'text', 0, '2026-02-10 21:16:17', '2026-02-10 21:16:17'),
+(17, 'social_github', '', 'social', 'text', 0, '2026-02-10 21:16:17', '2026-02-10 21:16:17');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sliders`
+--
+
+CREATE TABLE `sliders` (
+  `slider_id` int(11) NOT NULL,
+  `title` varchar(255) DEFAULT NULL,
+  `subtitle` varchar(255) DEFAULT NULL,
+  `image` varchar(255) DEFAULT NULL,
+  `link` varchar(255) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `display_order` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `social_links`
+--
+
+CREATE TABLE `social_links` (
+  `social_id` int(11) NOT NULL,
+  `platform_name` varchar(50) NOT NULL,
+  `icon_class` varchar(50) DEFAULT NULL,
+  `profile_url` varchar(255) NOT NULL,
+  `display_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `social_links`
+--
+
+INSERT INTO `social_links` (`social_id`, `platform_name`, `icon_class`, `profile_url`, `display_order`, `is_active`, `created_at`) VALUES
+(1, 'Facebook', 'fab fa-facebook', 'https://facebook.com/miraedgetech', 1, 1, '2026-02-08 04:23:13'),
+(2, 'Twitter', 'fab fa-twitter', 'https://twitter.com/miraedgetech', 2, 1, '2026-02-08 04:23:13'),
+(3, 'LinkedIn', 'fab fa-linkedin', 'https://linkedin.com/company/mira-edge-technologies', 3, 1, '2026-02-08 04:23:13'),
+(4, 'Instagram', 'fab fa-instagram', 'https://instagram.com/miraedgetech', 4, 1, '2026-02-08 04:23:13'),
+(5, 'GitHub', 'fab fa-github', 'https://github.com/miraedgetech', 5, 1, '2026-02-08 04:23:13');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `teams`
+--
+
+CREATE TABLE `teams` (
+  `team_id` int(11) NOT NULL,
+  `team_name` varchar(100) NOT NULL,
+  `team_description` text DEFAULT NULL,
+  `team_leader_id` int(11) DEFAULT NULL,
+  `department` enum('web_dev','mobile_dev','digital_marketing','design','content','sales') NOT NULL,
+  `status` enum('active','inactive') DEFAULT 'active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `teams`
+--
+
+INSERT INTO `teams` (`team_id`, `team_name`, `team_description`, `team_leader_id`, `department`, `status`, `created_at`) VALUES
+(1, 'Web Development Team', 'Specializes in building modern websites and web applications', NULL, 'web_dev', 'active', '2026-02-08 04:23:13'),
+(2, 'Mobile Development Team', 'Focuses on iOS and Android application development', NULL, 'mobile_dev', 'active', '2026-02-08 04:23:13'),
+(3, 'Digital Marketing Team', 'Handles SEO, social media, and online marketing', NULL, 'digital_marketing', 'active', '2026-02-08 04:23:13'),
+(4, 'Design Team', 'Creates stunning UI/UX designs and graphics', NULL, 'design', 'active', '2026-02-08 04:23:13');
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `team_performance_view`
+-- (See below for the actual view)
+--
+CREATE TABLE `team_performance_view` (
+`team_id` int(11)
+,`team_name` varchar(100)
+,`total_projects` bigint(21)
+,`completed_projects` decimal(22,0)
+,`total_tasks` bigint(21)
+,`completed_tasks` decimal(22,0)
+,`avg_completion_hours` decimal(14,4)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `testimonials`
+--
+
+CREATE TABLE `testimonials` (
+  `testimonial_id` int(11) NOT NULL,
+  `name` varchar(150) NOT NULL,
+  `position` varchar(150) DEFAULT NULL,
+  `company` varchar(150) DEFAULT NULL,
+  `quote` text DEFAULT NULL,
+  `avatar` varchar(255) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `user_id` int(11) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `first_name` varchar(50) NOT NULL,
+  `last_name` varchar(50) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `profile_image` varchar(255) DEFAULT NULL,
+  `position` varchar(100) DEFAULT NULL,
+  `bio` text DEFAULT NULL,
+  `linkedin_url` varchar(255) DEFAULT NULL,
+  `github_url` varchar(255) DEFAULT NULL,
+  `role` enum('super_admin','admin','team_leader','developer','content_manager') NOT NULL,
+  `status` enum('active','inactive','on_leave') DEFAULT 'active',
+  `email_verified` tinyint(1) DEFAULT 0,
+  `last_login` datetime DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`user_id`, `username`, `email`, `password_hash`, `first_name`, `last_name`, `phone`, `profile_image`, `position`, `bio`, `linkedin_url`, `github_url`, `role`, `status`, `email_verified`, `last_login`, `created_at`, `updated_at`) VALUES
+(1, 'superadmin', 'admin@miraedgetech.com', '$2y$10$YourHashedPasswordHere', 'Super', 'Admin', NULL, NULL, NULL, NULL, NULL, NULL, 'super_admin', 'active', 0, NULL, '2026-02-08 04:23:13', '2026-02-08 04:23:13'),
+(5, 'admin', 'manager@miraedgetech.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', 'Manager', NULL, NULL, NULL, NULL, NULL, NULL, 'admin', 'active', 1, '2026-02-08 17:37:01', '2026-02-08 05:49:00', '2026-02-08 16:37:01'),
+(6, 'dev1', 'developer1@miraedgetech.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'John', 'Developer', NULL, NULL, NULL, NULL, NULL, NULL, 'developer', 'active', 1, NULL, '2026-02-08 05:49:00', '2026-02-08 05:49:00'),
+(7, 'ceo', 'nirttech@gmail.com', '$2y$12$VzMF/CfFkIN9MAikgmHr/egYWPf30YiHOuDrFl2oYzj3a1hLlxw1W', 'Nkwagoh', 'Tangunu', '+237672214035', '/assets/uploads/team/698aa8681eb63_1770694760.jpeg', 'CEO', 'The boss', 'https://web.facebook.com/61575356683090/', 'https://www.project.com', 'team_leader', 'active', 0, NULL, '2026-02-10 03:39:20', '2026-02-10 03:39:20');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_teams`
+--
+
+CREATE TABLE `user_teams` (
+  `user_team_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `team_id` int(11) NOT NULL,
+  `joined_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `is_active` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user_teams`
+--
+
+INSERT INTO `user_teams` (`user_team_id`, `user_id`, `team_id`, `joined_at`, `is_active`) VALUES
+(1, 7, 3, '2026-02-10 03:39:20', 1),
+(2, 7, 1, '2026-02-10 03:39:20', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `website_analytics_view`
+-- (See below for the actual view)
+--
+CREATE TABLE `website_analytics_view` (
+`visit_date` date
+,`total_visits` bigint(21)
+,`unique_visitors` bigint(21)
+,`page_url` varchar(500)
+,`country` varchar(100)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `active_projects_view`
+--
+DROP TABLE IF EXISTS `active_projects_view`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `active_projects_view`  AS SELECT `ip`.`internal_project_id` AS `internal_project_id`, `ip`.`project_name` AS `project_name`, `ip`.`project_code` AS `project_code`, `ip`.`status` AS `status`, `ip`.`priority` AS `priority`, `ip`.`deadline` AS `deadline`, `t`.`team_name` AS `team_name`, concat(`u`.`first_name`,' ',`u`.`last_name`) AS `project_lead`, count(distinct `pm`.`milestone_id`) AS `total_milestones`, sum(case when `pm`.`is_completed` = 1 then 1 else 0 end) AS `completed_milestones` FROM ((((`internal_projects` `ip` left join `project_team_assignments` `pta` on(`ip`.`internal_project_id` = `pta`.`internal_project_id`)) left join `teams` `t` on(`pta`.`team_id` = `t`.`team_id`)) left join `users` `u` on(`t`.`team_leader_id` = `u`.`user_id`)) left join `project_milestones` `pm` on(`ip`.`internal_project_id` = `pm`.`internal_project_id`)) WHERE `ip`.`status` in ('active','planned') GROUP BY `ip`.`internal_project_id` ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `team_performance_view`
+--
+DROP TABLE IF EXISTS `team_performance_view`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `team_performance_view`  AS SELECT `t`.`team_id` AS `team_id`, `t`.`team_name` AS `team_name`, count(distinct `ip`.`internal_project_id`) AS `total_projects`, sum(case when `ip`.`status` = 'completed' then 1 else 0 end) AS `completed_projects`, count(distinct `pt`.`task_id`) AS `total_tasks`, sum(case when `pt`.`status` = 'completed' then 1 else 0 end) AS `completed_tasks`, avg(case when `pt`.`status` = 'completed' then `pt`.`actual_hours` else NULL end) AS `avg_completion_hours` FROM (((`teams` `t` left join `project_team_assignments` `pta` on(`t`.`team_id` = `pta`.`team_id`)) left join `internal_projects` `ip` on(`pta`.`internal_project_id` = `ip`.`internal_project_id`)) left join `project_tasks` `pt` on(`ip`.`internal_project_id` = `pt`.`internal_project_id`)) GROUP BY `t`.`team_id` ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `website_analytics_view`
+--
+DROP TABLE IF EXISTS `website_analytics_view`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `website_analytics_view`  AS SELECT cast(`page_visits`.`visited_at` as date) AS `visit_date`, count(0) AS `total_visits`, count(distinct `page_visits`.`ip_address`) AS `unique_visitors`, `page_visits`.`page_url` AS `page_url`, `page_visits`.`country` AS `country` FROM `page_visits` GROUP BY cast(`page_visits`.`visited_at` as date), `page_visits`.`page_url`, `page_visits`.`country` ;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  ADD PRIMARY KEY (`log_id`),
+  ADD KEY `idx_user_activity` (`user_id`,`activity_type`),
+  ADD KEY `idx_created_at` (`created_at`);
+
+--
+-- Indexes for table `blog_categories`
+--
+ALTER TABLE `blog_categories`
+  ADD PRIMARY KEY (`blog_category_id`),
+  ADD UNIQUE KEY `slug` (`slug`);
+
+--
+-- Indexes for table `blog_comments`
+--
+ALTER TABLE `blog_comments`
+  ADD PRIMARY KEY (`comment_id`),
+  ADD KEY `idx_post` (`post_id`),
+  ADD KEY `idx_approved` (`is_approved`),
+  ADD KEY `idx_spam` (`is_spam`),
+  ADD KEY `idx_created` (`created_at`);
+
+--
+-- Indexes for table `blog_posts`
+--
+ALTER TABLE `blog_posts`
+  ADD PRIMARY KEY (`post_id`),
+  ADD UNIQUE KEY `slug` (`slug`),
+  ADD KEY `idx_slug` (`slug`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_published` (`published_at`),
+  ADD KEY `idx_blog_posts_category` (`blog_category_id`),
+  ADD KEY `idx_blog_posts_author` (`author_id`);
+ALTER TABLE `blog_posts` ADD FULLTEXT KEY `idx_search` (`title`,`excerpt`,`content`);
+
+--
+-- Indexes for table `blog_post_tags`
+--
+ALTER TABLE `blog_post_tags`
+  ADD PRIMARY KEY (`post_tag_id`),
+  ADD UNIQUE KEY `unique_post_tag` (`post_id`,`tag_id`),
+  ADD KEY `tag_id` (`tag_id`);
+
+--
+-- Indexes for table `blog_tags`
+--
+ALTER TABLE `blog_tags`
+  ADD PRIMARY KEY (`tag_id`),
+  ADD UNIQUE KEY `tag_name` (`tag_name`),
+  ADD UNIQUE KEY `slug` (`slug`);
+
+--
+-- Indexes for table `contact_messages`
+--
+ALTER TABLE `contact_messages`
+  ADD PRIMARY KEY (`message_id`),
+  ADD KEY `idx_read` (`is_read`),
+  ADD KEY `idx_replied` (`replied_to`);
+
+--
+-- Indexes for table `internal_projects`
+--
+ALTER TABLE `internal_projects`
+  ADD PRIMARY KEY (`internal_project_id`),
+  ADD UNIQUE KEY `project_code` (`project_code`),
+  ADD KEY `client_id` (`client_id`),
+  ADD KEY `created_by` (`created_by`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_priority` (`priority`);
+
+--
+-- Indexes for table `job_applications`
+--
+ALTER TABLE `job_applications`
+  ADD PRIMARY KEY (`application_id`),
+  ADD KEY `reviewed_by` (`reviewed_by`),
+  ADD KEY `idx_status` (`application_status`),
+  ADD KEY `idx_job` (`job_id`),
+  ADD KEY `idx_applications_job` (`job_id`),
+  ADD KEY `idx_applications_status` (`application_status`);
+
+--
+-- Indexes for table `job_categories`
+--
+ALTER TABLE `job_categories`
+  ADD PRIMARY KEY (`job_category_id`),
+  ADD UNIQUE KEY `slug` (`slug`);
+
+--
+-- Indexes for table `job_listings`
+--
+ALTER TABLE `job_listings`
+  ADD PRIMARY KEY (`job_id`),
+  ADD UNIQUE KEY `slug` (`slug`),
+  ADD KEY `created_by` (`created_by`),
+  ADD KEY `idx_slug` (`slug`),
+  ADD KEY `idx_job_type` (`job_type`),
+  ADD KEY `idx_active` (`is_active`),
+  ADD KEY `idx_jobs_category` (`job_category_id`);
+
+--
+-- Indexes for table `menu_items`
+--
+ALTER TABLE `menu_items`
+  ADD PRIMARY KEY (`menu_id`);
+
+--
+-- Indexes for table `notifications`
+--
+ALTER TABLE `notifications`
+  ADD PRIMARY KEY (`notification_id`),
+  ADD KEY `idx_user_read` (`user_id`,`is_read`);
+
+--
+-- Indexes for table `package_features`
+--
+ALTER TABLE `package_features`
+  ADD PRIMARY KEY (`feature_id`),
+  ADD KEY `package_id` (`package_id`);
+
+--
+-- Indexes for table `pages`
+--
+ALTER TABLE `pages`
+  ADD PRIMARY KEY (`page_id`),
+  ADD UNIQUE KEY `slug` (`slug`);
+
+--
+-- Indexes for table `page_visits`
+--
+ALTER TABLE `page_visits`
+  ADD PRIMARY KEY (`visit_id`),
+  ADD KEY `idx_page_url` (`page_url`(100)),
+  ADD KEY `idx_visited_at` (`visited_at`),
+  ADD KEY `idx_country` (`country`);
+
+--
+-- Indexes for table `password_resets`
+--
+ALTER TABLE `password_resets`
+  ADD PRIMARY KEY (`reset_id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `idx_token` (`token`);
+
+--
+-- Indexes for table `portfolio_categories`
+--
+ALTER TABLE `portfolio_categories`
+  ADD PRIMARY KEY (`category_id`),
+  ADD UNIQUE KEY `slug` (`slug`);
+
+--
+-- Indexes for table `portfolio_projects`
+--
+ALTER TABLE `portfolio_projects`
+  ADD PRIMARY KEY (`project_id`),
+  ADD UNIQUE KEY `slug` (`slug`),
+  ADD KEY `created_by` (`created_by`),
+  ADD KEY `idx_slug` (`slug`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_featured` (`is_featured`),
+  ADD KEY `idx_portfolio_category` (`category_id`);
+
+--
+-- Indexes for table `project_files`
+--
+ALTER TABLE `project_files`
+  ADD PRIMARY KEY (`file_id`),
+  ADD KEY `internal_project_id` (`internal_project_id`),
+  ADD KEY `task_id` (`task_id`),
+  ADD KEY `uploaded_by` (`uploaded_by`);
+
+--
+-- Indexes for table `project_images`
+--
+ALTER TABLE `project_images`
+  ADD PRIMARY KEY (`image_id`),
+  ADD KEY `project_id` (`project_id`);
+
+--
+-- Indexes for table `project_milestones`
+--
+ALTER TABLE `project_milestones`
+  ADD PRIMARY KEY (`milestone_id`),
+  ADD KEY `idx_completed` (`is_completed`),
+  ADD KEY `idx_milestones_project` (`internal_project_id`);
+
+--
+-- Indexes for table `project_tasks`
+--
+ALTER TABLE `project_tasks`
+  ADD PRIMARY KEY (`task_id`),
+  ADD KEY `milestone_id` (`milestone_id`),
+  ADD KEY `assigned_by` (`assigned_by`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_assigned` (`assigned_to`),
+  ADD KEY `idx_tasks_project` (`internal_project_id`),
+  ADD KEY `idx_tasks_assigned` (`assigned_to`);
+
+--
+-- Indexes for table `project_team_assignments`
+--
+ALTER TABLE `project_team_assignments`
+  ADD PRIMARY KEY (`assignment_id`),
+  ADD UNIQUE KEY `unique_project_team` (`internal_project_id`,`team_id`),
+  ADD KEY `team_id` (`team_id`);
+
+--
+-- Indexes for table `project_technologies`
+--
+ALTER TABLE `project_technologies`
+  ADD PRIMARY KEY (`tech_id`),
+  ADD KEY `project_id` (`project_id`),
+  ADD KEY `idx_tech_name` (`technology_name`);
+
+--
+-- Indexes for table `seo_metadata`
+--
+ALTER TABLE `seo_metadata`
+  ADD PRIMARY KEY (`seo_id`),
+  ADD UNIQUE KEY `unique_page` (`page_type`,`page_slug`);
+
+--
+-- Indexes for table `services`
+--
+ALTER TABLE `services`
+  ADD PRIMARY KEY (`service_id`),
+  ADD UNIQUE KEY `slug` (`slug`),
+  ADD KEY `idx_slug` (`slug`),
+  ADD KEY `idx_active` (`is_active`),
+  ADD KEY `idx_services_category` (`service_category_id`);
+
+--
+-- Indexes for table `service_categories`
+--
+ALTER TABLE `service_categories`
+  ADD PRIMARY KEY (`service_category_id`),
+  ADD UNIQUE KEY `slug` (`slug`);
+
+--
+-- Indexes for table `service_orders`
+--
+ALTER TABLE `service_orders`
+  ADD PRIMARY KEY (`order_id`),
+  ADD UNIQUE KEY `order_number` (`order_number`),
+  ADD KEY `package_id` (`package_id`),
+  ADD KEY `assigned_to` (`assigned_to`),
+  ADD KEY `idx_order_number` (`order_number`),
+  ADD KEY `idx_status` (`order_status`),
+  ADD KEY `idx_payment_status` (`payment_status`),
+  ADD KEY `idx_orders_service` (`service_id`),
+  ADD KEY `idx_orders_status` (`order_status`,`payment_status`);
+
+--
+-- Indexes for table `service_packages`
+--
+ALTER TABLE `service_packages`
+  ADD PRIMARY KEY (`package_id`),
+  ADD KEY `service_id` (`service_id`);
+
+--
+-- Indexes for table `site_settings`
+--
+ALTER TABLE `site_settings`
+  ADD PRIMARY KEY (`setting_id`),
+  ADD UNIQUE KEY `setting_key` (`setting_key`),
+  ADD KEY `idx_group` (`setting_group`);
+
+--
+-- Indexes for table `sliders`
+--
+ALTER TABLE `sliders`
+  ADD PRIMARY KEY (`slider_id`);
+
+--
+-- Indexes for table `social_links`
+--
+ALTER TABLE `social_links`
+  ADD PRIMARY KEY (`social_id`);
+
+--
+-- Indexes for table `teams`
+--
+ALTER TABLE `teams`
+  ADD PRIMARY KEY (`team_id`),
+  ADD KEY `team_leader_id` (`team_leader_id`),
+  ADD KEY `idx_department` (`department`);
+
+--
+-- Indexes for table `testimonials`
+--
+ALTER TABLE `testimonials`
+  ADD PRIMARY KEY (`testimonial_id`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`user_id`),
+  ADD UNIQUE KEY `username` (`username`),
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `idx_role` (`role`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_users_email` (`email`),
+  ADD KEY `idx_users_username` (`username`);
+
+--
+-- Indexes for table `user_teams`
+--
+ALTER TABLE `user_teams`
+  ADD PRIMARY KEY (`user_team_id`),
+  ADD UNIQUE KEY `unique_user_team` (`user_id`,`team_id`),
+  ADD KEY `team_id` (`team_id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `blog_categories`
+--
+ALTER TABLE `blog_categories`
+  MODIFY `blog_category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `blog_comments`
+--
+ALTER TABLE `blog_comments`
+  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `blog_posts`
+--
+ALTER TABLE `blog_posts`
+  MODIFY `post_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `blog_post_tags`
+--
+ALTER TABLE `blog_post_tags`
+  MODIFY `post_tag_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `blog_tags`
+--
+ALTER TABLE `blog_tags`
+  MODIFY `tag_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `contact_messages`
+--
+ALTER TABLE `contact_messages`
+  MODIFY `message_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `internal_projects`
+--
+ALTER TABLE `internal_projects`
+  MODIFY `internal_project_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `job_applications`
+--
+ALTER TABLE `job_applications`
+  MODIFY `application_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `job_categories`
+--
+ALTER TABLE `job_categories`
+  MODIFY `job_category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `job_listings`
+--
+ALTER TABLE `job_listings`
+  MODIFY `job_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `menu_items`
+--
+ALTER TABLE `menu_items`
+  MODIFY `menu_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `notifications`
+--
+ALTER TABLE `notifications`
+  MODIFY `notification_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `package_features`
+--
+ALTER TABLE `package_features`
+  MODIFY `feature_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+
+--
+-- AUTO_INCREMENT for table `pages`
+--
+ALTER TABLE `pages`
+  MODIFY `page_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `page_visits`
+--
+ALTER TABLE `page_visits`
+  MODIFY `visit_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `password_resets`
+--
+ALTER TABLE `password_resets`
+  MODIFY `reset_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT for table `portfolio_categories`
+--
+ALTER TABLE `portfolio_categories`
+  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `portfolio_projects`
+--
+ALTER TABLE `portfolio_projects`
+  MODIFY `project_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `project_files`
+--
+ALTER TABLE `project_files`
+  MODIFY `file_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `project_images`
+--
+ALTER TABLE `project_images`
+  MODIFY `image_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `project_milestones`
+--
+ALTER TABLE `project_milestones`
+  MODIFY `milestone_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `project_tasks`
+--
+ALTER TABLE `project_tasks`
+  MODIFY `task_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `project_team_assignments`
+--
+ALTER TABLE `project_team_assignments`
+  MODIFY `assignment_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `project_technologies`
+--
+ALTER TABLE `project_technologies`
+  MODIFY `tech_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `seo_metadata`
+--
+ALTER TABLE `seo_metadata`
+  MODIFY `seo_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `services`
+--
+ALTER TABLE `services`
+  MODIFY `service_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `service_categories`
+--
+ALTER TABLE `service_categories`
+  MODIFY `service_category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `service_orders`
+--
+ALTER TABLE `service_orders`
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `service_packages`
+--
+ALTER TABLE `service_packages`
+  MODIFY `package_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `site_settings`
+--
+ALTER TABLE `site_settings`
+  MODIFY `setting_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+
+--
+-- AUTO_INCREMENT for table `sliders`
+--
+ALTER TABLE `sliders`
+  MODIFY `slider_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `social_links`
+--
+ALTER TABLE `social_links`
+  MODIFY `social_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `teams`
+--
+ALTER TABLE `teams`
+  MODIFY `team_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `testimonials`
+--
+ALTER TABLE `testimonials`
+  MODIFY `testimonial_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `user_teams`
+--
+ALTER TABLE `user_teams`
+  MODIFY `user_team_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  ADD CONSTRAINT `activity_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `blog_comments`
+--
+ALTER TABLE `blog_comments`
+  ADD CONSTRAINT `blog_comments_ibfk_1` FOREIGN KEY (`post_id`) REFERENCES `blog_posts` (`post_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `blog_posts`
+--
+ALTER TABLE `blog_posts`
+  ADD CONSTRAINT `blog_posts_ibfk_1` FOREIGN KEY (`blog_category_id`) REFERENCES `blog_categories` (`blog_category_id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `blog_posts_ibfk_2` FOREIGN KEY (`author_id`) REFERENCES `users` (`user_id`);
+
+--
+-- Constraints for table `blog_post_tags`
+--
+ALTER TABLE `blog_post_tags`
+  ADD CONSTRAINT `blog_post_tags_ibfk_1` FOREIGN KEY (`post_id`) REFERENCES `blog_posts` (`post_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `blog_post_tags_ibfk_2` FOREIGN KEY (`tag_id`) REFERENCES `blog_tags` (`tag_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `internal_projects`
+--
+ALTER TABLE `internal_projects`
+  ADD CONSTRAINT `internal_projects_ibfk_1` FOREIGN KEY (`client_id`) REFERENCES `service_orders` (`order_id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `internal_projects_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`);
+
+--
+-- Constraints for table `job_applications`
+--
+ALTER TABLE `job_applications`
+  ADD CONSTRAINT `job_applications_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `job_listings` (`job_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `job_applications_ibfk_2` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `job_listings`
+--
+ALTER TABLE `job_listings`
+  ADD CONSTRAINT `job_listings_ibfk_1` FOREIGN KEY (`job_category_id`) REFERENCES `job_categories` (`job_category_id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `job_listings_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`);
+
+--
+-- Constraints for table `notifications`
+--
+ALTER TABLE `notifications`
+  ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `package_features`
+--
+ALTER TABLE `package_features`
+  ADD CONSTRAINT `package_features_ibfk_1` FOREIGN KEY (`package_id`) REFERENCES `service_packages` (`package_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `password_resets`
+--
+ALTER TABLE `password_resets`
+  ADD CONSTRAINT `password_resets_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `portfolio_projects`
+--
+ALTER TABLE `portfolio_projects`
+  ADD CONSTRAINT `portfolio_projects_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `portfolio_categories` (`category_id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `portfolio_projects_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `project_files`
+--
+ALTER TABLE `project_files`
+  ADD CONSTRAINT `project_files_ibfk_1` FOREIGN KEY (`internal_project_id`) REFERENCES `internal_projects` (`internal_project_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `project_files_ibfk_2` FOREIGN KEY (`task_id`) REFERENCES `project_tasks` (`task_id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `project_files_ibfk_3` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`user_id`);
+
+--
+-- Constraints for table `project_images`
+--
+ALTER TABLE `project_images`
+  ADD CONSTRAINT `project_images_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `portfolio_projects` (`project_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `project_milestones`
+--
+ALTER TABLE `project_milestones`
+  ADD CONSTRAINT `project_milestones_ibfk_1` FOREIGN KEY (`internal_project_id`) REFERENCES `internal_projects` (`internal_project_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `project_tasks`
+--
+ALTER TABLE `project_tasks`
+  ADD CONSTRAINT `project_tasks_ibfk_1` FOREIGN KEY (`internal_project_id`) REFERENCES `internal_projects` (`internal_project_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `project_tasks_ibfk_2` FOREIGN KEY (`milestone_id`) REFERENCES `project_milestones` (`milestone_id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `project_tasks_ibfk_3` FOREIGN KEY (`assigned_to`) REFERENCES `users` (`user_id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `project_tasks_ibfk_4` FOREIGN KEY (`assigned_by`) REFERENCES `users` (`user_id`);
+
+--
+-- Constraints for table `project_team_assignments`
+--
+ALTER TABLE `project_team_assignments`
+  ADD CONSTRAINT `project_team_assignments_ibfk_1` FOREIGN KEY (`internal_project_id`) REFERENCES `internal_projects` (`internal_project_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `project_team_assignments_ibfk_2` FOREIGN KEY (`team_id`) REFERENCES `teams` (`team_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `project_technologies`
+--
+ALTER TABLE `project_technologies`
+  ADD CONSTRAINT `project_technologies_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `portfolio_projects` (`project_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `services`
+--
+ALTER TABLE `services`
+  ADD CONSTRAINT `services_ibfk_1` FOREIGN KEY (`service_category_id`) REFERENCES `service_categories` (`service_category_id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `service_orders`
+--
+ALTER TABLE `service_orders`
+  ADD CONSTRAINT `service_orders_ibfk_1` FOREIGN KEY (`service_id`) REFERENCES `services` (`service_id`),
+  ADD CONSTRAINT `service_orders_ibfk_2` FOREIGN KEY (`package_id`) REFERENCES `service_packages` (`package_id`),
+  ADD CONSTRAINT `service_orders_ibfk_3` FOREIGN KEY (`assigned_to`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `service_packages`
+--
+ALTER TABLE `service_packages`
+  ADD CONSTRAINT `service_packages_ibfk_1` FOREIGN KEY (`service_id`) REFERENCES `services` (`service_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `teams`
+--
+ALTER TABLE `teams`
+  ADD CONSTRAINT `teams_ibfk_1` FOREIGN KEY (`team_leader_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `user_teams`
+--
+ALTER TABLE `user_teams`
+  ADD CONSTRAINT `user_teams_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `user_teams_ibfk_2` FOREIGN KEY (`team_id`) REFERENCES `teams` (`team_id`) ON DELETE CASCADE;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

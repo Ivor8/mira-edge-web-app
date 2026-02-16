@@ -60,7 +60,7 @@ $projects = $stmt->fetchAll();
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Internal Projects | Admin</title>
-    <link rel="stylesheet" href="<?php echo url('../../../assets/css/admin.css'); ?>">
+    <link rel="stylesheet" href="<?php echo url('assets/css/admin.css'); ?>">
      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -71,7 +71,7 @@ $projects = $stmt->fetchAll();
             <div class="page-header">
                 <h1 class="page-title"><i class="fas fa-project-diagram"></i> Internal Projects</h1>
                 <div class="page-actions">
-                    <a href="<?php echo url('/admin/modules/internal_projects/add.php'); ?>" class="btn btn-primary"><i class="fas fa-plus"></i> New Project</a>
+                    <a href="<?php echo url('admin/modules/internal-projects/add.php'); ?>" class="btn btn-primary"><i class="fas fa-plus"></i> New Project</a>
                 </div>
             </div>
 
@@ -108,9 +108,9 @@ $projects = $stmt->fetchAll();
                                     <td><?php echo e($p['creator_name'] ?? '-'); ?></td>
                                     <td><?php echo e($p['deadline']); ?></td>
                                     <td>
-                                        <a href="<?php echo url('/admin/modules/internal_projects/add.php?id=' . $p['internal_project_id']); ?>" class="btn btn-sm">Edit</a>
-                                        <a href="<?php echo url('/admin/modules/internal_projects/milestones.php?project_id=' . $p['internal_project_id']); ?>" class="btn btn-sm">Milestones</a>
-                                        <a href="<?php echo url('/admin/modules/internal_projects/tasks.php?project_id=' . $p['internal_project_id']); ?>" class="btn btn-sm">Tasks</a>
+                                        <a href="<?php echo url('admin/modules/internal-projects/add.php?id=' . $p['internal_project_id']); ?>" class="btn btn-sm">Edit</a>
+                                        <a href="<?php echo url('admin/modules/internal-projects/milestones.php?project_id=' . $p['internal_project_id']); ?>" class="btn btn-sm">Milestones</a>
+                                        <a href="<?php echo url('admin/modules/internal-projects/tasks.php?project_id=' . $p['internal_project_id']); ?>" class="btn btn-sm">Tasks</a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -129,6 +129,6 @@ $projects = $stmt->fetchAll();
             </form>
         </main>
     </div>
-    <script src="<?php echo url('../../../assets/js/admin.js'); ?>"></script>
+    <script src="<?php echo url('assets/js/admin.js'); ?>"></script>
 </body>
 </html>
