@@ -59,7 +59,8 @@ if (isset($_GET['delete_package'])) {
 }
 
 // Handle ADD package
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_package'])) {
+// Accept POST when package fields are present or when the add button was used.
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['add_package']) || !empty($_POST['package_name']))) {
     $package_name = trim($_POST['package_name'] ?? '');
     $description = trim($_POST['description'] ?? '');
     $price = (float)($_POST['price'] ?? 0);
@@ -909,7 +910,7 @@ if ($service_id) {
                                 <!-- Features -->
                                 <div class="form-group form-group-full">
                                     <label class="form-label">Package Features</label>
-                                    <div id="featuresContainer">
+                                    <div id="featuresContainer" style="margin-bottom: var(--space-md);">
                                         <div class="feature-input-group">
                                             <input type="text" 
                                                    name="features[]" 
@@ -921,7 +922,7 @@ if ($service_id) {
                                         </div>
                                     </div>
                                     <button type="button" class="add-feature-btn" id="addFeature">
-                                        <i class="fas fa-plus"></i> Add Another Feature
+                                        <i class="fas fa-plus"></i> Add Feature
                                     </button>
                                 </div>
                                 
@@ -1095,15 +1096,29 @@ if ($service_id) {
             const addFeatureBtn = document.getElementById('addFeature');
             const featuresContainer = document.getElementById('featuresContainer');
             
+            function updateRemoveButtons() {
+                const featureGroups = featuresContainer.querySelectorAll('.feature-input-group');
+                featureGroups.forEach((group, index) => {
+                    const removeBtn = group.querySelector('.remove-feature');
+                    if (featureGroups.length > 1) {
+                        removeBtn.style.display = 'flex';
+                    } else {
+                        removeBtn.style.display = 'none';
+                    }
+                });
+            }
+            
             if (addFeatureBtn && featuresContainer) {
-                addFeatureBtn.addEventListener('click', function() {
+                addFeatureBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
                     const featureGroup = document.createElement('div');
                     featureGroup.className = 'feature-input-group';
                     featureGroup.innerHTML = `
                         <input type="text" 
                                name="features[]" 
                                class="form-control" 
-                               placeholder="Add a feature">
+                               placeholder="Add a feature"
+                               required>
                         <button type="button" class="remove-feature">
                             <i class="fas fa-times"></i>
                         </button>
@@ -1111,17 +1126,27 @@ if ($service_id) {
                     featuresContainer.appendChild(featureGroup);
                     
                     // Add event listener to new remove button
-                    featureGroup.querySelector('.remove-feature').addEventListener('click', function() {
+                    featureGroup.querySelector('.remove-feature').addEventListener('click', function(e) {
+                        e.preventDefault();
                         featureGroup.remove();
+                        updateRemoveButtons();
                     });
+                    
+                    updateRemoveButtons();
+                    featureGroup.querySelector('input').focus();
                 });
                 
                 // Add event listeners to existing remove buttons
                 featuresContainer.querySelectorAll('.remove-feature').forEach(button => {
-                    button.addEventListener('click', function() {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
                         this.closest('.feature-input-group').remove();
+                        updateRemoveButtons();
                     });
                 });
+                
+                // Initialize button visibility on load
+                updateRemoveButtons();
             }
             
             // Delete package buttons

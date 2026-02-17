@@ -24,6 +24,87 @@ if (!$session->isAdmin()) {
     redirect(url('/'));
 }
 
+// Handle AJAX requests
+if (isset($_GET['action'])) {
+    if ($_GET['action'] === 'toggle_feature' && isset($_GET['id'])) {
+        $project_id = (int)$_GET['id'];
+        
+        try {
+            // Get current featured status
+            $stmt = $db->prepare("SELECT is_featured FROM portfolio_projects WHERE project_id = ?");
+            $stmt->execute([$project_id]);
+            $result = $stmt->fetch();
+            
+            if ($result) {
+                $new_status = $result['is_featured'] ? 0 : 1;
+                $stmt = $db->prepare("UPDATE portfolio_projects SET is_featured = ? WHERE project_id = ?");
+                $stmt->execute([$new_status, $project_id]);
+                
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true, 'featured' => $new_status]);
+                exit;
+            }
+        } catch (PDOException $e) {
+            error_log("Toggle Feature Error: " . $e->getMessage());
+        }
+        
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Error updating project']);
+        exit;
+    }
+}
+
+// Backwards-compatible GET delete handler (supports links/bookmarks that use ?delete=ID)
+if (isset($_GET['delete'])) {
+    $project_id = (int)$_GET['delete'];
+
+    try {
+        $db->beginTransaction();
+
+        // Get featured image to delete
+        $stmt = $db->prepare("SELECT featured_image FROM portfolio_projects WHERE project_id = ?");
+        $stmt->execute([$project_id]);
+        $project = $stmt->fetch();
+
+        if ($project && $project['featured_image']) {
+            $file_path = $_SERVER['DOCUMENT_ROOT'] . $project['featured_image'];
+            if (file_exists($file_path)) {
+                @unlink($file_path);
+            }
+        }
+
+        // Delete gallery images
+        $stmt = $db->prepare("SELECT image_url FROM project_images WHERE project_id = ?");
+        $stmt->execute([$project_id]);
+        $images = $stmt->fetchAll();
+        foreach ($images as $img) {
+            $file_path = $_SERVER['DOCUMENT_ROOT'] . $img['image_url'];
+            if (file_exists($file_path)) {
+                @unlink($file_path);
+            }
+        }
+
+        // Remove DB records
+        $stmt = $db->prepare("DELETE FROM project_images WHERE project_id = ?");
+        $stmt->execute([$project_id]);
+
+        $stmt = $db->prepare("DELETE FROM project_technologies WHERE project_id = ?");
+        $stmt->execute([$project_id]);
+
+        $stmt = $db->prepare("DELETE FROM portfolio_projects WHERE project_id = ?");
+        $stmt->execute([$project_id]);
+
+        $db->commit();
+        $session->setFlash('success', 'Project deleted successfully.');
+    } catch (PDOException $e) {
+        $db->rollBack();
+        error_log("Delete Project (GET) Error: " . $e->getMessage());
+        $session->setFlash('error', 'Error deleting project.');
+    }
+
+    redirect(url('/admin/modules/projects/'));
+}
+
 $user = $session->getUser();
 $user_id = $user['user_id'];
 
@@ -36,8 +117,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             if ($action === 'delete') {
                 $placeholders = implode(',', array_fill(0, count($selected_projects), '?'));
+                
+                // Delete associated images first
+                $stmt = $db->prepare("SELECT project_id FROM portfolio_projects WHERE project_id IN ($placeholders)");
+                $stmt->execute($selected_projects);
+                $projects_to_delete = $stmt->fetchAll();
+                
+                foreach ($projects_to_delete as $proj) {
+                    $img_stmt = $db->prepare("SELECT image_url FROM project_images WHERE project_id = ?");
+                    $img_stmt->execute([$proj['project_id']]);
+                    $images = $img_stmt->fetchAll();
+                    
+                    foreach ($images as $img) {
+                        $file_path = $_SERVER['DOCUMENT_ROOT'] . $img['image_url'];
+                        if (file_exists($file_path)) {
+                            @unlink($file_path);
+                        }
+                    }
+                }
+                
+                // Delete project images
+                $stmt = $db->prepare("DELETE FROM project_images WHERE project_id IN ($placeholders)");
+                $stmt->execute($selected_projects);
+                
+                // Delete project technologies
+                $stmt = $db->prepare("DELETE FROM project_technologies WHERE project_id IN ($placeholders)");
+                $stmt->execute($selected_projects);
+                
+                // Delete projects
                 $stmt = $db->prepare("DELETE FROM portfolio_projects WHERE project_id IN ($placeholders)");
                 $stmt->execute($selected_projects);
+                
                 $session->setFlash('success', 'Selected projects deleted successfully.');
             } elseif ($action === 'feature') {
                 $placeholders = implode(',', array_fill(0, count($selected_projects), '?'));
@@ -53,6 +163,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (PDOException $e) {
             error_log("Bulk Action Error: " . $e->getMessage());
             $session->setFlash('error', 'Error performing bulk action.');
+        }
+    }
+    
+    // Handle single project delete
+    if (isset($_POST['delete_project']) && isset($_POST['project_id'])) {
+        $project_id = (int)$_POST['project_id'];
+        
+        try {
+            $db->beginTransaction();
+            
+            // Get project to delete featured image
+            $stmt = $db->prepare("SELECT featured_image FROM portfolio_projects WHERE project_id = ?");
+            $stmt->execute([$project_id]);
+            $project = $stmt->fetch();
+            
+            if ($project && $project['featured_image']) {
+                $file_path = $_SERVER['DOCUMENT_ROOT'] . $project['featured_image'];
+                if (file_exists($file_path)) {
+                    @unlink($file_path);
+                }
+            }
+            
+            // Delete project images
+            $stmt = $db->prepare("SELECT image_url FROM project_images WHERE project_id = ?");
+            $stmt->execute([$project_id]);
+            $images = $stmt->fetchAll();
+            
+            foreach ($images as $img) {
+                $file_path = $_SERVER['DOCUMENT_ROOT'] . $img['image_url'];
+                if (file_exists($file_path)) {
+                    @unlink($file_path);
+                }
+            }
+            
+            // Delete from database
+            $stmt = $db->prepare("DELETE FROM project_images WHERE project_id = ?");
+            $stmt->execute([$project_id]);
+            
+            $stmt = $db->prepare("DELETE FROM project_technologies WHERE project_id = ?");
+            $stmt->execute([$project_id]);
+            
+            $stmt = $db->prepare("DELETE FROM portfolio_projects WHERE project_id = ?");
+            $stmt->execute([$project_id]);
+            
+            $db->commit();
+            
+            $session->setFlash('success', 'Project deleted successfully.');
+        } catch (PDOException $e) {
+            $db->rollBack();
+            error_log("Delete Project Error: " . $e->getMessage());
+            $session->setFlash('error', 'Error deleting project.');
         }
     }
 }
@@ -290,9 +451,12 @@ $categories = $stmt->fetchAll();
                                             </td>
                                             <td class="image-cell">
                                                 <div class="project-image-thumb">
-                                                    <img src="<?php echo e($project['featured_image'] ?: url('/assets/images/default-project.jpg')); ?>" 
-                                                         alt="<?php echo e($project['title']); ?>"
-                                                         onerror="this.src='<?php echo url('/assets/images/default-project.jpg'); ?>'">
+                                                      <?php
+                                                         $imgSrc = $project['featured_image'] ? url(ltrim($project['featured_image'], '/')) : url('assets/images/default-project.jpg');
+                                                      ?>
+                                                      <img src="<?php echo e($imgSrc); ?>"
+                                                          alt="<?php echo e($project['title']); ?>"
+                                                          onerror="this.src='<?php echo url('assets/images/default-project.jpg'); ?>'">
                                                 </div>
                                             </td>
                                             <td class="title-cell">

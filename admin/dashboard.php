@@ -16,14 +16,14 @@ $auth = new Auth();
 // Check if user is logged in and is admin
 if (!$session->isLoggedIn()) {
     $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
-    redirect('../login.php');
+    redirect(url('/login.php'));
 }
 
 if (!$session->isAdmin()) {
     $session->setFlash('error', 'Access denied. Admin privileges required.');
-    redirect('/');
+    redirect(url('/'));
 }
 
 // Simply redirect to the main admin index
-redirect('/mira edge/admin/');
+redirect(url('/admin/index.php'));
 ?>

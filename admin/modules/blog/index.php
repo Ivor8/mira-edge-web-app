@@ -21,6 +21,41 @@ if (!$session->isLoggedIn()) {
 
 $user = $session->getUser();
 
+// Handle POST delete from modal (single post delete)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['post_id']) && !isset($_POST['bulk_action'])) {
+    $post_id = (int)$_POST['post_id'];
+
+    try {
+        // Get featured image to delete later
+        $stmt = $db->prepare("SELECT featured_image FROM blog_posts WHERE post_id = ?");
+        $stmt->execute([$post_id]);
+        $post = $stmt->fetch();
+
+        // Delete post tags
+        $stmt = $db->prepare("DELETE FROM blog_post_tags WHERE post_id = ?");
+        $stmt->execute([$post_id]);
+
+        // Delete post
+        $stmt = $db->prepare("DELETE FROM blog_posts WHERE post_id = ?");
+        $stmt->execute([$post_id]);
+
+        // Delete featured image if exists
+        if ($post && $post['featured_image']) {
+            $image_path = dirname(dirname(dirname(dirname(__FILE__)))) . $post['featured_image'];
+            if (file_exists($image_path)) {
+                @unlink($image_path);
+            }
+        }
+
+        $session->setFlash('success', 'Post deleted successfully.');
+    } catch (PDOException $e) {
+        $session->setFlash('error', 'Error deleting post: ' . $e->getMessage());
+        error_log("Delete Post Error: " . $e->getMessage());
+    }
+
+    redirect(url('/admin/modules/blog/index.php'));
+}
+
 // Check permissions (admin, content_manager, or author)
 if (!in_array($user['role'], ['super_admin', 'admin', 'content_manager'])) {
     // Check if user is author of any posts
@@ -969,7 +1004,7 @@ $stats = $stmt->fetch();
                         <i class="fas fa-eye"></i>
                     </div>
                     <div class="stat-content">
-                        <h3><?php echo number_format($stats['total_views']); ?></h3>
+                        <h3><?php echo number_format($stats['total_views'] ?? 0); ?></h3>
                         <p>Total Views</p>
                     </div>
                 </div>
@@ -1299,9 +1334,12 @@ $stats = $stmt->fetch();
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline" id="modalCancel">Cancel</button>
-                <a href="#" id="confirmDelete" class="btn btn-danger">
-                    <i class="fas fa-trash"></i> Delete Post
-                </a>
+                <form method="POST" action="" id="confirmDeleteForm" style="display:inline;">
+                    <input type="hidden" name="post_id" id="deletePostId" value="">
+                    <button type="submit" name="delete" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Delete Post
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -1322,14 +1360,14 @@ $stats = $stmt->fetch();
                 });
             }
             
-            // Delete post buttons
+            // Delete post buttons (open modal and set hidden input)
             const deleteButtons = document.querySelectorAll('.btn-delete');
             const modal = document.getElementById('deleteModal');
             const modalClose = document.getElementById('modalClose');
             const modalCancel = document.getElementById('modalCancel');
             const modalBackdrop = document.querySelector('.modal-backdrop');
             const postToDeleteSpan = document.getElementById('postToDelete');
-            const confirmDeleteLink = document.getElementById('confirmDelete');
+            const deletePostId = document.getElementById('deletePostId');
             
             deleteButtons.forEach(button => {
                 button.addEventListener('click', function(e) {
@@ -1339,7 +1377,7 @@ $stats = $stmt->fetch();
                     const postTitle = this.dataset.postTitle;
                     
                     postToDeleteSpan.textContent = postTitle;
-                    confirmDeleteLink.href = '?action=delete&id=' + postId;
+                    if (deletePostId) deletePostId.value = postId;
                     
                     modal.classList.add('active');
                     document.body.style.overflow = 'hidden';
@@ -1395,7 +1433,7 @@ $stats = $stmt->fetch();
             }, 5000);
         });
         
-        // Confirm bulk action
+        // Confirm bulk action and append selected posts to the bulk form
         function confirmBulkAction() {
             const checkboxes = document.querySelectorAll('.post-checkbox:checked');
             const action = document.querySelector('.bulk-action-select').value;
@@ -1409,11 +1447,26 @@ $stats = $stmt->fetch();
                 alert('Please select a bulk action.');
                 return false;
             }
-            
+
             if (action === 'delete') {
-                return confirm('Are you sure you want to delete the selected posts? This action cannot be undone.');
+                if (!confirm('Are you sure you want to delete the selected posts? This action cannot be undone.')) {
+                    return false;
+                }
             }
-            
+
+            const bulkForm = document.getElementById('bulkForm');
+            if (bulkForm) {
+                // remove previous inputs
+                bulkForm.querySelectorAll('input[name="selected_posts[]"]').forEach(i => i.remove());
+                checkboxes.forEach(cb => {
+                    const hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'selected_posts[]';
+                    hidden.value = cb.value;
+                    bulkForm.appendChild(hidden);
+                });
+            }
+
             return true;
         }
     </script>

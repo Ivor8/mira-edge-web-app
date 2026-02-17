@@ -28,6 +28,31 @@ $user = $session->getUser();
 
 // Handle team actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Infer action if submit button names are missing (some browsers/JS can omit them)
+    if (!isset($_POST['add_team']) && !isset($_POST['update_team']) && !isset($_POST['delete_team']) && !isset($_POST['assign_member']) && !isset($_POST['remove_member'])) {
+        // Add team when team_name present and no team_id
+        if (!empty($_POST['team_name']) && empty($_POST['team_id'])) {
+            $_POST['add_team'] = 1;
+        }
+
+        // Update team when team_id and team_name present
+        if (!empty($_POST['team_id']) && !empty($_POST['team_name'])) {
+            $_POST['update_team'] = 1;
+        }
+
+        // Delete team when team_id provided and delete flag not sent
+        if (!empty($_POST['team_id']) && isset($_POST['confirm_delete'])) {
+            $_POST['delete_team'] = 1;
+        }
+
+        // Assign/remove member when both team_id and user_id present
+        if (!empty($_POST['team_id']) && !empty($_POST['user_id'])) {
+            // If remove_member explicitly present, keep it; otherwise default to assign
+            if (!isset($_POST['remove_member'])) {
+                $_POST['assign_member'] = 1;
+            }
+        }
+    }
     if (isset($_POST['add_team'])) {
         // Add new team
         $team_name = trim($_POST['team_name'] ?? '');

@@ -49,7 +49,9 @@ $stmt->execute([$package_id]);
 $features = $stmt->fetchAll();
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_package'])) {
+// Accept any POST to this page as the update request (submit button names can be unreliable
+// in some browsers when JS manipulates the button). Validate required fields below.
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $package_name = trim($_POST['package_name'] ?? '');
     $description = trim($_POST['description'] ?? '');
     $price = (float)($_POST['price'] ?? 0);

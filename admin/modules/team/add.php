@@ -31,7 +31,8 @@ $stmt = $db->query("SELECT team_id, team_name FROM teams WHERE status = 'active'
 $teams = $stmt->fetchAll();
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_member'])) {
+// Accept POST submissions even if the submit button name is missing
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['add_member']) || !empty($_POST['username']))) {
     $errors = [];
     
     // Collect form data

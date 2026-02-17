@@ -26,6 +26,37 @@ if (!$session->isAdmin()) {
 
 $user = $session->getUser();
 
+// Handle POST delete from modal (submit via hidden service_id)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['service_id']) && !isset($_POST['bulk_action'])) {
+    $service_id = (int)$_POST['service_id'];
+
+    try {
+        // First get the image to delete later
+        $stmt = $db->prepare("SELECT featured_image FROM services WHERE service_id = ?");
+        $stmt->execute([$service_id]);
+        $service = $stmt->fetch();
+
+        // Delete service (packages and features will be deleted by cascade)
+        $stmt = $db->prepare("DELETE FROM services WHERE service_id = ?");
+        $stmt->execute([$service_id]);
+
+        // Delete image file if exists
+        if ($service && $service['featured_image']) {
+            $image_path = dirname(dirname(dirname(dirname(__FILE__)))) . $service['featured_image'];
+            if (file_exists($image_path)) {
+                @unlink($image_path);
+            }
+        }
+
+        $session->setFlash('success', 'Service deleted successfully!');
+    } catch (PDOException $e) {
+        $session->setFlash('error', 'Error deleting service: ' . $e->getMessage());
+        error_log("Delete Service Error: " . $e->getMessage());
+    }
+
+    redirect(url('/admin/modules/services/index.php'));
+}
+
 // Handle DELETE service
 if (isset($_GET['delete'])) {
     $service_id = (int)$_GET['delete'];
@@ -618,7 +649,7 @@ $popular_services = count(array_filter($services, fn($s) => $s['is_popular']));
                     </h3>
                     
                     <!-- Bulk Actions -->
-                    <form method="POST" action="" class="bulk-actions-form">
+                    <form method="POST" action="" class="bulk-actions-form" id="bulkActionForm">
                         <select name="bulk_action" class="bulk-action-select">
                             <option value="">Bulk Actions</option>
                             <option value="activate">Activate</option>
@@ -801,9 +832,12 @@ $popular_services = count(array_filter($services, fn($s) => $s['is_popular']));
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline" id="modalCancel">Cancel</button>
-                <a href="#" id="confirmDelete" class="btn btn-danger">
-                    <i class="fas fa-trash"></i> Delete Service
-                </a>
+                <form method="POST" action="" id="confirmDeleteForm" style="display:inline;">
+                    <input type="hidden" name="service_id" id="deleteServiceId" value="">
+                    <button type="submit" name="delete" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Delete Service
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -831,7 +865,8 @@ $popular_services = count(array_filter($services, fn($s) => $s['is_popular']));
             const modalCancel = document.getElementById('modalCancel');
             const modalBackdrop = document.querySelector('.modal-backdrop');
             const serviceToDeleteSpan = document.getElementById('serviceToDelete');
-            const confirmDeleteLink = document.getElementById('confirmDelete');
+            const confirmDeleteForm = document.getElementById('confirmDeleteForm');
+            const deleteServiceId = document.getElementById('deleteServiceId');
             
             deleteButtons.forEach(button => {
                 button.addEventListener('click', function(e) {
@@ -841,7 +876,7 @@ $popular_services = count(array_filter($services, fn($s) => $s['is_popular']));
                     const serviceName = this.dataset.serviceName;
                     
                     serviceToDeleteSpan.textContent = serviceName;
-                    confirmDeleteLink.href = '?delete=' + serviceId;
+                    if (deleteServiceId) deleteServiceId.value = serviceId;
                     
                     modal.classList.add('active');
                     document.body.style.overflow = 'hidden';
@@ -912,10 +947,28 @@ $popular_services = count(array_filter($services, fn($s) => $s['is_popular']));
                 return false;
             }
             
+            // If deleting, confirm with the user
             if (action === 'delete') {
-                return confirm('Are you sure you want to delete the selected services? This action cannot be undone.');
+                if (!confirm('Are you sure you want to delete the selected services? This action cannot be undone.')) {
+                    return false;
+                }
             }
-            
+
+            // Append selected service IDs to the bulk form so server receives them
+            const bulkForm = document.getElementById('bulkActionForm');
+            if (bulkForm) {
+                // Remove any existing selected_services[] inputs
+                bulkForm.querySelectorAll('input[name="selected_services[]"]').forEach(i => i.remove());
+
+                checkboxes.forEach(cb => {
+                    const hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'selected_services[]';
+                    hidden.value = cb.value;
+                    bulkForm.appendChild(hidden);
+                });
+            }
+
             return true;
         }
     </script>

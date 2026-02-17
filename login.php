@@ -15,11 +15,11 @@ $auth = new Auth();
 if ($session->isLoggedIn()) {
     $role = $session->getUserRole();
     if (in_array($role, ['super_admin', 'admin', 'team_leader'])) {
-        redirect('/admin/index.php');
+        redirect(url('/admin/dashboard.php'));
     } elseif ($role === 'developer') {
-        redirect('/developer/dashboard.php');
+        redirect(url('/developer/dashboard.php'));
     } else {
-        redirect('/');
+        redirect(url('/'));
     }
 }
 
@@ -49,11 +49,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Redirect based on role
             if (in_array($role, ['super_admin', 'admin', 'team_leader'])) {
-                redirect('/admin/index.php');
+                redirect(url('/admin/dashboard.php'));
             } elseif ($role === 'developer') {
-                redirect ('/mira edge/developer/dashboard.php');
+                redirect(url('/developer/dashboard.php'));
             } else {
-                redirect('/');
+                redirect(url('/'));
             }
         } else {
             $errors['general'] = $result['message'];

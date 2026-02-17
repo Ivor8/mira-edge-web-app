@@ -183,9 +183,9 @@ class ProjectsManager {
         document.getElementById('projectToDelete').textContent = projectTitle;
         document.getElementById('deleteProjectId').value = projectId;
         
-        // Update form action to include project ID
+        // Use hidden input for project id and post to the same page (don't rely on querystring action)
         const deleteForm = document.getElementById('deleteForm');
-        deleteForm.action = `?action=delete&id=${projectId}`;
+        deleteForm.action = ''; // post to current page
         
         this.showModal(this.deleteModal);
     }

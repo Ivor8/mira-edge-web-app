@@ -175,13 +175,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Handle technologies
             if (isset($_POST['technologies']) && is_array($_POST['technologies'])) {
                 foreach ($_POST['technologies'] as $technology) {
-                    $tech_name = trim($technology);
-                    if (!empty($tech_name)) {
-                        $stmt = $db->prepare("
-                            INSERT INTO project_technologies (project_id, technology_name)
-                            VALUES (?, ?)
-                        ");
-                        $stmt->execute([$project_id, $tech_name]);
+                    if (is_array($technology)) {
+                        // Handle if it's nested arrays
+                        foreach ($technology as $tech) {
+                            $tech_name = trim($tech);
+                            if (!empty($tech_name)) {
+                                $stmt = $db->prepare("
+                                    INSERT INTO project_technologies (project_id, technology_name)
+                                    VALUES (?, ?)
+                                ");
+                                $stmt->execute([$project_id, $tech_name]);
+                            }
+                        }
+                    } else {
+                        $tech_name = trim($technology);
+                        if (!empty($tech_name)) {
+                            $stmt = $db->prepare("
+                                INSERT INTO project_technologies (project_id, technology_name)
+                                VALUES (?, ?)
+                            ");
+                            $stmt->execute([$project_id, $tech_name]);
+                        }
                     }
                 }
             }
@@ -791,23 +805,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             function updateTechnologiesUI() {
                 technologiesContainer.innerHTML = '';
-                technologiesInput.value = JSON.stringify(technologies);
+                
+                // Clear old hidden inputs
+                const form = document.getElementById('addProjectForm');
+                const oldInputs = form.querySelectorAll('input[name="technologies[]"]');
+                oldInputs.forEach(input => input.remove());
                 
                 technologies.forEach((tech, index) => {
                     const tag = document.createElement('div');
                     tag.className = 'technology-tag';
                     tag.innerHTML = `
-                        ${tech}
+                        ${escapeHtml(tech)}
                         <button type="button" class="remove-technology" data-index="${index}">
                             <i class="fas fa-times"></i>
                         </button>
                     `;
                     technologiesContainer.appendChild(tag);
+                    
+                    // Create hidden input for each technology
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'technologies[]';
+                    input.value = tech;
+                    form.appendChild(input);
                 });
                 
                 // Add event listeners to remove buttons
                 document.querySelectorAll('.remove-technology').forEach(button => {
-                    button.addEventListener('click', function() {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
                         const index = parseInt(this.dataset.index);
                         technologies.splice(index, 1);
                         updateTechnologiesUI();
@@ -904,6 +930,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             addCharacterCounter(shortDesc, 500);
             addCharacterCounter(seoDesc, 160);
         });
-    </script>
+        
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
 </body>
 </html>

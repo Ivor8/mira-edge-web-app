@@ -91,7 +91,7 @@
                     <span>Settings</span>
                 </a>
                 <div class="profile-menu-divider"></div>
-                <a href="logout.php" class="profile-menu-item">
+                <a href="<?php echo url('/logout.php'); ?>" class="profile-menu-item">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>

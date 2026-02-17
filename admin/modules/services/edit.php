@@ -51,7 +51,9 @@ $categories = $stmt->fetchAll();
 // Handle form submission
 $errors = [];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_service'])) {
+// Process updates on any POST - this avoids relying on the submit button name which
+// can be missing when JS modifies the button before submission.
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Get form data
     $service_name = trim($_POST['service_name'] ?? '');
     $slug = trim($_POST['slug'] ?? '');
@@ -217,8 +219,18 @@ $service = $stmt->fetch();
             }
         }
         
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-md);
+        }
+        
         .form-group {
-            margin-bottom: var(--space-lg);
+            margin-bottom: var(--space-md);
+        }
+        
+        .form-group:last-child {
+            margin-bottom: 0;
         }
         
         .form-label {
@@ -230,19 +242,22 @@ $service = $stmt->fetch();
         }
         
         .form-label.required::after {
-            content: ' *';
+            content: '*';
             color: var(--color-error);
+            margin-left: 2px;
         }
         
         .form-control {
+            display: block;
             width: 100%;
-            padding: 12px 16px;
+            padding: 10px 12px;
+            font-family: var(--font-primary);
             font-size: 0.875rem;
+            color: var(--color-gray-800);
+            background-color: var(--color-white);
             border: 1px solid var(--color-gray-300);
             border-radius: var(--radius-md);
             transition: all var(--transition-fast);
-            background-color: var(--color-white);
-            color: var(--color-gray-800);
         }
         
         .form-control:focus {
@@ -253,50 +268,202 @@ $service = $stmt->fetch();
         
         .form-control.error {
             border-color: var(--color-error);
+            background-color: rgba(244, 67, 54, 0.02);
         }
         
         .form-error {
-            color: var(--color-error);
             font-size: 0.75rem;
+            color: var(--color-error);
+            font-weight: 500;
             margin-top: 4px;
         }
         
         .form-text {
-            display: block;
-            margin-top: 4px;
             font-size: 0.75rem;
             color: var(--color-gray-500);
+            display: block;
+            margin-top: 4px;
         }
         
-        .input-with-button {
+        .image-preview {
+            max-width: 200px;
+            margin-top: var(--space-sm);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 2px solid var(--color-gray-200);
+        }
+        
+        .image-preview img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .current-image {
+            margin-top: var(--space-md);
+            padding: var(--space-md);
+            background-color: var(--color-gray-50);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-gray-200);
+        }
+        
+        .current-image p {
+            margin: 0 0 var(--space-sm);
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--color-gray-700);
+        }
+        
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-upload-label {
             display: flex;
+            align-items: center;
+            justify-content: center;
             gap: var(--space-sm);
+            flex-direction: column;
+            padding: var(--space-xl);
+            border: 2px dashed var(--color-gray-300);
+            border-radius: var(--radius-md);
+            background-color: var(--color-gray-50);
+            color: var(--color-gray-600);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-weight: 500;
+            text-align: center;
         }
         
-        .input-with-button .form-control {
-            flex: 1;
+        .file-upload-label:hover,
+        .file-upload .file-input:focus + .file-upload-label {
+            border-color: var(--color-black);
+            background-color: var(--color-white);
+            color: var(--color-black);
+        }
+        
+        .file-upload .file-input:focus + .file-upload-label {
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .file-upload-label i {
+            font-size: 1.5rem;
+        }
+        
+        .char-counter {
+            font-size: 0.75rem;
+            color: var(--color-gray-500);
+            text-align: right;
+            margin-top: 4px;
         }
         
         .checkbox-wrapper {
             display: flex;
             align-items: center;
             gap: var(--space-sm);
-            padding: var(--space-sm) 0;
         }
         
         .checkbox-wrapper input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
             cursor: pointer;
+            accent-color: var(--color-black);
+            border-radius: 4px;
         }
         
         .checkbox-label {
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
-            cursor: pointer;
             font-size: 0.875rem;
             color: var(--color-gray-700);
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+        
+        .checkbox-label:hover {
+            color: var(--color-black);
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: var(--space-md);
+            justify-content: flex-start;
+            padding-top: var(--space-lg);
+            border-top: 1px solid var(--color-gray-200);
+            margin-top: var(--space-xl);
+        }
+        
+        .btn-lg {
+            padding: 12px 24px;
+            font-weight: 600;
+        }
+        
+        .alert {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-md);
+            padding: var(--space-md) var(--space-lg);
+            border-radius: var(--radius-md);
+            border-left: 4px solid;
+            animation: slideInDown 0.3s ease-out;
+        }
+        
+        .alert-success {
+            background-color: rgba(0, 200, 83, 0.1);
+            border-left-color: var(--color-success);
+            color: var(--color-success-dark);
+        }
+        
+        .alert-error {
+            background-color: rgba(244, 67, 54, 0.1);
+            border-left-color: var(--color-error);
+            color: var(--color-error-dark);
+        }
+        
+        .alert i {
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .alert-close {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            font-size: 1.25rem;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .alert-close:hover {
+            opacity: 0.7;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .form-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
         }
         
         .checkbox-label i {

@@ -60,7 +60,8 @@ $member_teams = $stmt->fetchAll();
 $current_team_ids = array_column($member_teams, 'team_id');
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_member'])) {
+// Accept POST updates regardless of submit button name to ensure update is processed
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = [];
     
     // Collect form data

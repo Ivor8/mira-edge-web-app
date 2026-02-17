@@ -21,28 +21,37 @@ if (!$session->isLoggedIn()) {
 
 $user = $session->getUser();
 
-// Get post ID
+// Determine whether we're editing or creating
 $post_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$is_edit = $post_id > 0;
 
-if (!$post_id) {
-    $session->setFlash('error', 'Invalid post ID.');
-    redirect(url('/admin/modules/blog/index.php'));
-}
+if ($is_edit) {
+    // Get post data
+    $stmt = $db->prepare("SELECT * FROM blog_posts WHERE post_id = ?");
+    $stmt->execute([$post_id]);
+    $post = $stmt->fetch();
 
-// Get post data
-$stmt = $db->prepare("SELECT * FROM blog_posts WHERE post_id = ?");
-$stmt->execute([$post_id]);
-$post = $stmt->fetch();
+    if (!$post) {
+        $session->setFlash('error', 'Post not found.');
+        redirect(url('/admin/modules/blog/index.php'));
+    }
 
-if (!$post) {
-    $session->setFlash('error', 'Post not found.');
-    redirect(url('/admin/modules/blog/index.php'));
-}
+    // Check permission (only admins, content managers, or the author can edit)
+    if (!in_array($user['role'], ['super_admin', 'admin', 'content_manager']) && $post['author_id'] != $user['user_id']) {
+        $session->setFlash('error', 'You do not have permission to edit this post.');
+        redirect(url('/admin/modules/blog/index.php'));
+    }
 
-// Check permission (only admins, content managers, or the author can edit)
-if (!in_array($user['role'], ['super_admin', 'admin', 'content_manager']) && $post['author_id'] != $user['user_id']) {
-    $session->setFlash('error', 'You do not have permission to edit this post.');
-    redirect(url('/admin/modules/blog/index.php'));
+} else {
+    // Prepare empty defaults for creating a new post
+    $post = [
+        'title' => '', 'slug' => '', 'excerpt' => '', 'content' => '',
+        'blog_category_id' => null, 'featured_image' => null, 'image_alt' => '',
+        'status' => 'draft', 'is_featured' => 0, 'reading_time' => 0,
+        'seo_title' => '', 'seo_description' => '', 'seo_keywords' => ''
+    ];
+    $post_tags = [];
+    $post_tag_ids = [];
 }
 
 // Get categories and tags
@@ -63,10 +72,10 @@ $stmt->execute([$post_id]);
 $post_tags = $stmt->fetchAll();
 $post_tag_ids = array_column($post_tags, 'tag_id');
 
-// Handle form submission
+// Handle form submission (create or update)
 $errors = [];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_post'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_post']) || isset($_POST['create_post']) || isset($_POST['title']))) {
     // Get form data
     $title = trim($_POST['title'] ?? '');
     $slug = trim($_POST['slug'] ?? '');
@@ -153,93 +162,149 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_post'])) {
         $featured_image = null;
     }
     
-    // If no errors, update post
+    // If no errors, perform create or update
     if (empty($errors)) {
         try {
             $db->beginTransaction();
-            
+
             // Calculate reading time (assuming 200 words per minute)
             $word_count = str_word_count(strip_tags($content));
             $reading_time = ceil($word_count / 200);
-            
+
             // Update published_at if status changes to published
-            $published_at = $post['published_at'];
-            if ($status === 'published' && $post['status'] !== 'published') {
-                $published_at = date('Y-m-d H:i:s');
-            }
-            
-            // Update post
-            $stmt = $db->prepare("
-                UPDATE blog_posts SET
+            if ($is_edit) {
+                $published_at = $post['published_at'];
+                if ($status === 'published' && $post['status'] !== 'published') {
+                    $published_at = date('Y-m-d H:i:s');
+                }
+
+                // Update post
+                $stmt = $db->prepare("UPDATE blog_posts SET
                     title = ?, slug = ?, excerpt = ?, content = ?, 
                     blog_category_id = ?, featured_image = ?, image_alt = ?,
                     status = ?, is_featured = ?, reading_time = ?,
                     seo_title = ?, seo_description = ?, seo_keywords = ?,
                     published_at = ?, updated_at = NOW()
-                WHERE post_id = ?
-            ");
-            
-            $stmt->execute([
-                $title, $slug, $excerpt, $content, $blog_category_id,
-                $featured_image, $image_alt, $status, $is_featured, $reading_time,
-                $seo_title, $seo_description, $seo_keywords, $published_at, $post_id
-            ]);
-            
-            // Update tags - delete existing
-            $stmt = $db->prepare("DELETE FROM blog_post_tags WHERE post_id = ?");
-            $stmt->execute([$post_id]);
-            
-            // Add selected tags
-            if (!empty($selected_tags)) {
-                foreach ($selected_tags as $tag_id) {
-                    $tag_id = (int)$tag_id;
-                    if ($tag_id > 0) {
-                        $stmt = $db->prepare("
-                            INSERT INTO blog_post_tags (post_id, tag_id)
-                            VALUES (?, ?)
-                        ");
-                        $stmt->execute([$post_id, $tag_id]);
-                    }
-                }
-            }
-            
-            // Add new tags if any
-            if (isset($_POST['new_tags']) && !empty($_POST['new_tags'])) {
-                $new_tags = explode(',', $_POST['new_tags']);
-                foreach ($new_tags as $new_tag) {
-                    $tag_name = trim($new_tag);
-                    if (!empty($tag_name)) {
-                        // Check if tag exists
-                        $stmt = $db->prepare("SELECT tag_id FROM blog_tags WHERE tag_name = ?");
-                        $stmt->execute([$tag_name]);
-                        $existing_tag = $stmt->fetch();
-                        
-                        if ($existing_tag) {
-                            $tag_id = $existing_tag['tag_id'];
-                        } else {
-                            // Create new tag
-                            $tag_slug = generateSlug($tag_name);
-                            $stmt = $db->prepare("INSERT INTO blog_tags (tag_name, slug) VALUES (?, ?)");
-                            $stmt->execute([$tag_name, $tag_slug]);
-                            $tag_id = $db->lastInsertId();
+                WHERE post_id = ?");
+
+                $stmt->execute([
+                    $title, $slug, $excerpt, $content, $blog_category_id,
+                    $featured_image, $image_alt, $status, $is_featured, $reading_time,
+                    $seo_title, $seo_description, $seo_keywords, $published_at, $post_id
+                ]);
+
+                // Update tags - delete existing
+                $stmt = $db->prepare("DELETE FROM blog_post_tags WHERE post_id = ?");
+                $stmt->execute([$post_id]);
+
+                // Add selected tags
+                if (!empty($selected_tags)) {
+                    foreach ($selected_tags as $tag_id) {
+                        $tag_id = (int)$tag_id;
+                        if ($tag_id > 0) {
+                            $stmt = $db->prepare("INSERT INTO blog_post_tags (post_id, tag_id) VALUES (?, ?)");
+                            $stmt->execute([$post_id, $tag_id]);
                         }
-                        
-                        // Link tag to post
-                        $stmt = $db->prepare("INSERT IGNORE INTO blog_post_tags (post_id, tag_id) VALUES (?, ?)");
-                        $stmt->execute([$post_id, $tag_id]);
                     }
                 }
+
+                // Add new tags if any
+                if (isset($_POST['new_tags']) && !empty($_POST['new_tags'])) {
+                    $new_tags = explode(',', $_POST['new_tags']);
+                    foreach ($new_tags as $new_tag) {
+                        $tag_name = trim($new_tag);
+                        if (!empty($tag_name)) {
+                            // Check if tag exists
+                            $stmt = $db->prepare("SELECT tag_id FROM blog_tags WHERE tag_name = ?");
+                            $stmt->execute([$tag_name]);
+                            $existing_tag = $stmt->fetch();
+
+                            if ($existing_tag) {
+                                $tag_id = $existing_tag['tag_id'];
+                            } else {
+                                // Create new tag
+                                $tag_slug = generateSlug($tag_name);
+                                $stmt = $db->prepare("INSERT INTO blog_tags (tag_name, slug) VALUES (?, ?)");
+                                $stmt->execute([$tag_name, $tag_slug]);
+                                $tag_id = $db->lastInsertId();
+                            }
+
+                            // Link tag to post
+                            $stmt = $db->prepare("INSERT IGNORE INTO blog_post_tags (post_id, tag_id) VALUES (?, ?)");
+                            $stmt->execute([$post_id, $tag_id]);
+                        }
+                    }
+                }
+
+                $db->commit();
+
+                $session->setFlash('success', 'Post updated successfully!');
+                redirect(url('/admin/modules/blog/edit.php?id=' . $post_id));
+
+            } else {
+                // Create new post
+                $published_at = ($status === 'published') ? date('Y-m-d H:i:s') : null;
+
+                $stmt = $db->prepare("INSERT INTO blog_posts
+                    (title, slug, excerpt, content, blog_category_id, featured_image, image_alt,
+                     status, is_featured, reading_time, seo_title, seo_description, seo_keywords,
+                     author_id, published_at, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+
+                $stmt->execute([
+                    $title, $slug, $excerpt, $content, $blog_category_id, $featured_image, $image_alt,
+                    $status, $is_featured, $reading_time, $seo_title, $seo_description, $seo_keywords,
+                    $user['user_id'], $published_at
+                ]);
+
+                $new_post_id = $db->lastInsertId();
+
+                // Add selected tags
+                if (!empty($selected_tags)) {
+                    foreach ($selected_tags as $tag_id) {
+                        $tag_id = (int)$tag_id;
+                        if ($tag_id > 0) {
+                            $stmt = $db->prepare("INSERT INTO blog_post_tags (post_id, tag_id) VALUES (?, ?)");
+                            $stmt->execute([$new_post_id, $tag_id]);
+                        }
+                    }
+                }
+
+                // Add new tags
+                if (isset($_POST['new_tags']) && !empty($_POST['new_tags'])) {
+                    $new_tags = explode(',', $_POST['new_tags']);
+                    foreach ($new_tags as $new_tag) {
+                        $tag_name = trim($new_tag);
+                        if (!empty($tag_name)) {
+                            $stmt = $db->prepare("SELECT tag_id FROM blog_tags WHERE tag_name = ?");
+                            $stmt->execute([$tag_name]);
+                            $existing_tag = $stmt->fetch();
+
+                            if ($existing_tag) {
+                                $tag_id = $existing_tag['tag_id'];
+                            } else {
+                                $tag_slug = generateSlug($tag_name);
+                                $stmt = $db->prepare("INSERT INTO blog_tags (tag_name, slug) VALUES (?, ?)");
+                                $stmt->execute([$tag_name, $tag_slug]);
+                                $tag_id = $db->lastInsertId();
+                            }
+
+                            $stmt = $db->prepare("INSERT IGNORE INTO blog_post_tags (post_id, tag_id) VALUES (?, ?)");
+                            $stmt->execute([$new_post_id, $tag_id]);
+                        }
+                    }
+                }
+
+                $db->commit();
+
+                $session->setFlash('success', 'Post created successfully!');
+                redirect(url('/admin/modules/blog/edit.php?id=' . $new_post_id));
             }
-            
-            $db->commit();
-            
-            $session->setFlash('success', 'Post updated successfully!');
-            redirect(url('/admin/modules/blog/edit.php?id=' . $post_id));
-            
+
         } catch (PDOException $e) {
             $db->rollBack();
-            $errors['general'] = 'Error updating post: ' . $e->getMessage();
-            error_log("Update Post Error: " . $e->getMessage());
+            $errors['general'] = 'Error saving post: ' . $e->getMessage();
+            error_log("Save Post Error: " . $e->getMessage());
         }
     }
 }
@@ -256,21 +321,28 @@ if (isset($_POST['publish_post'])) {
     }
 }
 
-// Get fresh post data after potential update
-$stmt = $db->prepare("SELECT * FROM blog_posts WHERE post_id = ?");
-$stmt->execute([$post_id]);
-$post = $stmt->fetch();
+// If we have a valid post_id, get fresh post data after potential update
+if ($post_id > 0) {
+    $stmt = $db->prepare("SELECT * FROM blog_posts WHERE post_id = ?");
+    $stmt->execute([$post_id]);
+    $fetched = $stmt->fetch();
+    if ($fetched) {
+        $post = $fetched;
+    }
 
-// Get updated tags
-$stmt = $db->prepare("
-    SELECT t.tag_id, t.tag_name 
-    FROM blog_post_tags pt 
-    JOIN blog_tags t ON pt.tag_id = t.tag_id 
-    WHERE pt.post_id = ?
-");
-$stmt->execute([$post_id]);
-$post_tags = $stmt->fetchAll();
-$post_tag_ids = array_column($post_tags, 'tag_id');
+    // Get updated tags
+    $stmt = $db->prepare("SELECT t.tag_id, t.tag_name 
+        FROM blog_post_tags pt 
+        JOIN blog_tags t ON pt.tag_id = t.tag_id 
+        WHERE pt.post_id = ?");
+    $stmt->execute([$post_id]);
+    $post_tags = $stmt->fetchAll();
+    $post_tag_ids = array_column($post_tags, 'tag_id');
+} else {
+    // ensure defaults remain set for new post
+    $post_tags = $post_tags ?? [];
+    $post_tag_ids = $post_tag_ids ?? [];
+}
 
 ?>
 <!DOCTYPE html>
@@ -856,22 +928,26 @@ $post_tag_ids = array_column($post_tags, 'tag_id');
                         <div class="post-meta">
                             <span>
                                 <i class="fas fa-user"></i>
-                                Author ID: <?php echo $post['author_id']; ?>
+                                Author ID: <?php echo $post['author_id'] ?? 'New'; ?>
                             </span>
+                            <?php if (isset($post['created_at'])): ?>
                             <span>
                                 <i class="fas fa-calendar"></i>
                                 Created: <?php echo formatDate($post['created_at'], 'M d, Y'); ?>
                             </span>
-                            <?php if ($post['published_at']): ?>
+                            <?php endif; ?>
+                            <?php if (isset($post['published_at']) && $post['published_at']): ?>
                                 <span>
                                     <i class="fas fa-check-circle"></i>
                                     Published: <?php echo formatDate($post['published_at'], 'M d, Y'); ?>
                                 </span>
                             <?php endif; ?>
+                            <?php if (isset($post['views_count'])): ?>
                             <span>
                                 <i class="fas fa-eye"></i>
-                                Views: <?php echo number_format($post['views_count']); ?>
+                                Views: <?php echo number_format($post['views_count'] ?? 0); ?>
                             </span>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div>
@@ -985,10 +1061,17 @@ $post_tag_ids = array_column($post_tags, 'tag_id');
                                     </div>
                                     
                                     <div class="form-buttons">
-                                        <button type="submit" name="update_post" value="update" class="btn btn-primary">
-                                            <i class="fas fa-save"></i> Update
-                                        </button>
-                                        <?php if ($post['status'] !== 'published'): ?>
+                                        <?php if ($is_edit): ?>
+                                            <button type="submit" name="update_post" value="update" class="btn btn-primary">
+                                                <i class="fas fa-save"></i> Update
+                                            </button>
+                                        <?php else: ?>
+                                            <button type="submit" name="create_post" value="create" class="btn btn-primary">
+                                                <i class="fas fa-plus"></i> Create
+                                            </button>
+                                        <?php endif; ?>
+
+                                        <?php if (($_POST['status'] ?? $post['status']) !== 'published'): ?>
                                             <button type="submit" name="publish_post" value="publish" class="btn btn-success">
                                                 <i class="fas fa-paper-plane"></i> Publish
                                             </button>

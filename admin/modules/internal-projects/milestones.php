@@ -117,7 +117,127 @@ $project = $stmt->fetch();
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Project Milestones | Admin</title>
-    <link rel="stylesheet" href="<?php echo url('../../../assets/css/admin.css'); ?>">
+    <link rel="stylesheet" href="<?php echo url('assets/css/admin.css'); ?>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .form-section {
+            background: var(--color-white);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-gray-200);
+        }
+        
+        .form-section h3 {
+            margin-top: 0;
+            margin-bottom: var(--space-md);
+            color: var(--color-gray-900);
+            font-size: 1.125rem;
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+        
+        .form-section h3 i {
+            color: var(--color-primary);
+        }
+        
+        .form-group {
+            margin-bottom: var(--space-lg);
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: var(--space-sm);
+            font-weight: 500;
+            color: var(--color-gray-700);
+            font-size: 0.95rem;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: var(--space-md);
+            border: 1px solid var(--color-gray-300);
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--color-primary-50);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-lg);
+        }
+        
+        .milestone-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-md);
+            border-bottom: 1px solid var(--color-gray-200);
+            transition: background-color var(--transition-normal);
+        }
+        
+        .milestone-row:hover {
+            background-color: var(--color-gray-50);
+        }
+        
+        .milestone-row.completed .milestone-name {
+            text-decoration: line-through;
+            color: var(--color-gray-500);
+        }
+        
+        .milestone-info {
+            flex: 1;
+        }
+        
+        .milestone-name {
+            font-weight: 500;
+            color: var(--color-gray-900);
+            margin-bottom: var(--space-xs);
+        }
+        
+        .milestone-due {
+            font-size: 0.875rem;
+            color: var(--color-gray-600);
+        }
+        
+        .milestone-actions {
+            display: flex;
+            gap: var(--space-sm);
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .milestone-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .milestone-actions {
+                margin-top: var(--space-md);
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
     <?php include '../../includes/admin-header.php'; ?>
@@ -132,46 +252,57 @@ $project = $stmt->fetch();
             <?php if (!empty($errors)): ?><div class="alert alert-error"><?php echo e(implode('<br>', $errors)); ?><button class="alert-close">&times;</button></div><?php endif; ?>
 
             <div class="form-section">
-                <h3>Add Milestone</h3>
+                <h3><i class="fas fa-plus-circle"></i> Add Milestone</h3>
                 <form method="post">
-                    <label>Milestone Name</label>
-                    <input type="text" name="milestone_name" required>
-                    <label>Due Date</label>
-                    <input type="date" name="due_date">
-                    <label>Description</label>
-                    <textarea name="description"></textarea>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Milestone Name</label>
+                            <input type="text" name="milestone_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Due Date</label>
+                            <input type="date" name="due_date">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea name="description"></textarea>
+                    </div>
                     <input type="hidden" name="add_milestone" value="1">
-                    <button class="btn btn-primary" type="submit">Add</button>
+                    <button class="btn btn-primary" type="submit"><i class="fas fa-check"></i> Add Milestone</button>
                 </form>
             </div>
 
-            <div class="table-responsive">
-                <table class="table">
-                    <thead><tr><th>Name</th><th>Due</th><th>Completed</th><th>Actions</th></tr></thead>
-                    <tbody>
+            <div class="form-section">
+                <h3><i class="fas fa-list"></i> Milestones (<?php echo count($milestones); ?>)</h3>
+                <?php if (empty($milestones)): ?>
+                    <p class="text-gray-500">No milestones yet. Create one to get started.</p>
+                <?php else: ?>
+                    <div class="milestones-list">
                         <?php foreach ($milestones as $m): ?>
-                            <tr>
-                                <td><?php echo e($m['milestone_name']); ?></td>
-                                <td><?php echo e($m['due_date']); ?></td>
-                                <td><?php echo $m['is_completed'] ? 'Yes' : 'No'; ?></td>
-                                <td>
+                            <div class="milestone-row <?php echo $m['is_completed'] ? 'completed' : ''; ?>">
+                                <div class="milestone-info">
+                                    <div class="milestone-name"><?php echo e($m['milestone_name']); ?></div>
+                                    <div class="milestone-due"><?php if ($m['due_date']): ?>Due: <?php echo formatDate($m['due_date'], 'M d, Y'); ?><?php endif; ?></div>
+                                </div>
+                                <div class="milestone-actions">
                                     <form method="post" style="display:inline-block;">
                                         <input type="hidden" name="milestone_id" value="<?php echo $m['milestone_id']; ?>">
-                                        <button class="btn" type="submit" name="action" value="toggle">Toggle</button>
+                                        <button class="btn btn-sm <?php echo $m['is_completed'] ? 'btn-outline' : 'btn-success'; ?>" type="submit" name="action" value="toggle" title="<?php echo $m['is_completed'] ? 'Mark Incomplete' : 'Mark Complete'; ?>"><i class="fas fa-<?php echo $m['is_completed'] ? 'undo' : 'check'; ?>"></i></button>
                                     </form>
                                     <form method="post" style="display:inline-block;">
                                         <input type="hidden" name="milestone_id" value="<?php echo $m['milestone_id']; ?>">
-                                        <button class="btn btn-danger" type="submit" name="action" value="delete">Delete</button>
+                                        <button class="btn btn-sm btn-danger" type="submit" name="action" value="delete" title="Delete"><i class="fas fa-trash"></i></button>
                                     </form>
-                                </td>
-                            </tr>
+                                </div>
+                            </div>
                         <?php endforeach; ?>
-                    </tbody>
-                </table>
+                    </div>
+                <?php endif; ?>
             </div>
 
         </main>
     </div>
-    <script src="<?php echo('assets/js/admin.js'); ?>"></script>
+    <script src="<?php echo url('assets/js/admin.js'); ?>"></script>
 </body>
 </html>

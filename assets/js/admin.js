@@ -190,18 +190,26 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.querySelectorAll('form').forEach(form => {
         const submitBtn = form.querySelector('button[type="submit"]');
-        
+
         if (submitBtn) {
-            form.addEventListener('submit', function() {
-                // Disable submit button and show loading
+            // Preserve original button content so we can restore it
+            if (!submitBtn.dataset.originalText) {
+                submitBtn.dataset.originalText = submitBtn.innerHTML.trim();
+            }
+
+            form.addEventListener('submit', function(event) {
+                // Allow native validation to run first; if it's invalid, don't proceed
+                if (!form.checkValidity()) return;
+
+                // Disable submit button and show loading state
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-                
-                // Re-enable after 5 seconds (in case of error)
+
+                // Re-enable after 10 seconds as a fallback in case submission stalls
                 setTimeout(() => {
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = submitBtn.dataset.originalText || 'Submit';
-                }, 5000);
+                }, 10000);
             });
         }
     });

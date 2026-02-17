@@ -100,6 +100,210 @@
 .input-with-currency {
     display: flex;
     gap: var(--space-sm);
+    align-items: flex-start;
+}
+
+.input-with-currency .form-control {
+    flex: 1;
+}
+
+.currency-select {
+    width: 120px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-md);
+    background-color: var(--color-white);
+    color: var(--color-gray-800);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.currency-select:focus {
+    outline: none;
+    border-color: var(--color-black);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Feature Input Groups */
+.feature-input-group {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+    align-items: center;
+}
+
+.feature-input-group .form-control {
+    margin-bottom: 0;
+}
+
+.remove-feature {
+    background-color: rgba(244, 67, 54, 0.1);
+    color: var(--color-error);
+    border: 1px solid rgba(244, 67, 54, 0.2);
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-feature:hover {
+    background-color: rgba(244, 67, 54, 0.2);
+    border-color: var(--color-error);
+}
+
+.add-feature-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: 8px 16px;
+    background-color: rgba(0, 0, 0, 0.05);
+    color: var(--color-gray-700);
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+    margin-top: var(--space-sm);
+}
+
+.add-feature-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-color: var(--color-gray-400);
+}
+
+/* Form Grid Layouts */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-lg);
+}
+
+.form-group-full {
+    grid-column: 1 / -1;
+}
+
+/* Flash Messages/Alerts */
+.flash-messages {
+    margin-bottom: var(--space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    animation: slideInDown 0.5s ease-out;
+}
+
+.alert {
+    padding: var(--space-md) var(--space-lg);
+    border-radius: var(--radius-md);
+    border-left: 4px solid;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    animation: slideInDown 0.3s ease-out;
+}
+
+.alert-success {
+    background-color: rgba(0, 200, 83, 0.1);
+    border-left-color: var(--color-success);
+    color: var(--color-success-dark);
+}
+
+.alert-error {
+    background-color: rgba(244, 67, 54, 0.1);
+    border-left-color: var(--color-error);
+    color: var(--color-error-dark);
+}
+
+.alert-warning {
+    background-color: rgba(255, 152, 0, 0.1);
+    border-left-color: var(--color-warning);
+    color: var(--color-warning-dark);
+}
+
+.alert i {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.alert-content {
+    flex: 1;
+}
+
+.alert-close {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: 1.25rem;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.alert-close:hover {
+    opacity: 0.7;
+}
+
+/* Form Tags/Badges */
+.form-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--color-gray-100);
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+    margin: 2px;
+}
+
+.form-tag button {
+    background: none;
+    border: none;
+    color: var(--color-gray-500);
+    cursor: pointer;
+    padding: 0;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.form-tag button:hover {
+    color: var(--color-error);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-group-full {
+        grid-column: 1;
+    }
+    
+    .feature-input-group {
+        grid-template-columns: 1fr;
+    }
+    
+    .remove-feature {
+        width: 100%;
+    }
+}
+    display: flex;
+    gap: var(--space-sm);
 }
 
 .input-with-currency .form-control {

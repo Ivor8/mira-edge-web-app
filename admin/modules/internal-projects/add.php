@@ -87,6 +87,87 @@ $clients = $stmt->fetchAll();
     <title><?php echo $editing ? 'Edit Project' : 'New Project'; ?> | Admin</title>
     <link rel="stylesheet" href="<?php echo url('assets/css/admin.css'); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .form-section {
+            background: var(--color-white);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-gray-200);
+        }
+        
+        .form-section h3 {
+            margin-top: 0;
+            margin-bottom: var(--space-md);
+            color: var(--color-gray-900);
+            font-size: 1.125rem;
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+        
+        .form-section h3 i {
+            color: var(--color-primary);
+        }
+        
+        .form-group {
+            margin-bottom: var(--space-lg);
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: var(--space-sm);
+            font-weight: 500;
+            color: var(--color-gray-700);
+            font-size: 0.95rem;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: var(--space-md);
+            border: 1px solid var(--color-gray-300);
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--color-primary-50);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-lg);
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: var(--space-md);
+            margin-top: var(--space-xl);
+            padding-top: var(--space-lg);
+            border-top: 1px solid var(--color-gray-200);
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
     <?php include '../../includes/admin-header.php'; ?>
@@ -101,8 +182,9 @@ $clients = $stmt->fetchAll();
             <?php if (!empty($errors)): ?><div class="alert alert-error"><?php echo e(implode('<br>', $errors)); ?><button class="alert-close">&times;</button></div><?php endif; ?>
 
             <form method="post">
-                <div class="form-grid">
-                    <div class="form-section">
+                <div class="form-section">
+                    <h3><i class="fas fa-info-circle"></i> Project Information</h3>
+                    <div class="form-group">
                         <label>Project Name</label>
                         <input type="text" name="project_name" value="<?php echo e($_POST['project_name'] ?? $project['project_name'] ?? ''); ?>" required>
 
@@ -128,28 +210,44 @@ $clients = $stmt->fetchAll();
 
                     </div>
 
-                    <div class="form-section">
+                    <div class="form-group">
                         <label>Description</label>
-                        <textarea name="description" rows="10"><?php echo e($_POST['description'] ?? $project['description'] ?? ''); ?></textarea>
+                        <textarea name="description"><?php echo e($_POST['description'] ?? $project['description'] ?? ''); ?></textarea>
+                    </div>
+                </div>
 
-                        <label>Status</label>
-                        <select name="status">
+                <div class="form-section">
+                    <h3><i class="fas fa-cog"></i> Project Settings</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select name="status">
                             <option value="planned" <?php echo (($_POST['status'] ?? $project['status'] ?? '') == 'planned') ? 'selected' : ''; ?>>Planned</option>
                             <option value="active" <?php echo (($_POST['status'] ?? $project['status'] ?? '') == 'active') ? 'selected' : ''; ?>>Active</option>
                             <option value="on_hold" <?php echo (($_POST['status'] ?? $project['status'] ?? '') == 'on_hold') ? 'selected' : ''; ?>>On Hold</option>
                             <option value="completed" <?php echo (($_POST['status'] ?? $project['status'] ?? '') == 'completed') ? 'selected' : ''; ?>>Completed</option>
                         </select>
 
-                        <label>Priority</label>
-                        <select name="priority">
-                            <option value="low" <?php echo (($_POST['priority'] ?? $project['priority'] ?? '') == 'low') ? 'selected' : ''; ?>>Low</option>
-                            <option value="medium" <?php echo (($_POST['priority'] ?? $project['priority'] ?? '') == 'medium') ? 'selected' : ''; ?>>Medium</option>
-                            <option value="high" <?php echo (($_POST['priority'] ?? $project['priority'] ?? '') == 'high') ? 'selected' : ''; ?>>High</option>
-                            <option value="urgent" <?php echo (($_POST['priority'] ?? $project['priority'] ?? '') == 'urgent') ? 'selected' : ''; ?>>Urgent</option>
-                        </select>
+                        <div class="form-group">
+                            <label>Priority</label>
+                            <select name="priority">
+                                <option value="low" <?php echo (($_POST['priority'] ?? $project['priority'] ?? '') == 'low') ? 'selected' : ''; ?>>Low</option>
+                                <option value="medium" <?php echo (($_POST['priority'] ?? $project['priority'] ?? '') == 'medium') ? 'selected' : ''; ?>>Medium</option>
+                                <option value="high" <?php echo (($_POST['priority'] ?? $project['priority'] ?? '') == 'high') ? 'selected' : ''; ?>>High</option>
+                                <option value="urgent" <?php echo (($_POST['priority'] ?? $project['priority'] ?? '') == 'urgent') ? 'selected' : ''; ?>>Urgent</option>
+                            </select>
+                        </div>
 
-                        <div style="margin-top:20px;"><button class="btn btn-primary" type="submit"><?php echo $editing ? 'Update Project' : 'Create Project'; ?></button></div>
+                        <div class="form-group">
+                            <label>Currency</label>
+                            <input type="text" name="currency" value="<?php echo e($_POST['currency'] ?? $project['currency'] ?? 'XAF'); ?>">
+                        </div>
                     </div>
+                </div>
+
+                <div class="form-actions">
+                    <button class="btn btn-primary" type="submit"><i class="fas fa-check"></i> Save Project</button>
+                    <a href="<?php echo url('/admin/modules/internal_projects/index.php'); ?>" class="btn btn-outline">Cancel</a>
                 </div>
             </form>
         </main>

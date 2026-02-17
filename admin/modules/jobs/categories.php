@@ -81,8 +81,95 @@ $categories = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Job Categories | Admin</title>
-    <link rel="stylesheet" href="<?php echo url('../../../assets/css/admin.css'); ?>">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="<?php echo url('assets/css/admin.css'); ?>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .form-section {
+            background: var(--color-white);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-gray-200);
+        }
+        
+        .form-section h3 {
+            margin-top: 0;
+            margin-bottom: var(--space-md);
+            color: var(--color-gray-900);
+            font-size: 1.125rem;
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+        
+        .form-section h3 i {
+            color: var(--color-primary);
+        }
+        
+        .form-group {
+            margin-bottom: var(--space-lg);
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: var(--space-sm);
+            font-weight: 500;
+            color: var(--color-gray-700);
+            font-size: 0.95rem;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: var(--space-md);
+            border: 1px solid var(--color-gray-300);
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--color-primary-50);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .form-group .form-check {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-top: var(--space-md);
+        }
+        
+        .form-group .form-check input {
+            width: auto;
+            margin: 0;
+        }
+        
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-lg);
+        }
+        
+        .table tbody tr:hover {
+            background-color: var(--color-gray-50);
+        }
+        
+        @media (max-width: 768px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
     <?php include '../../includes/admin-header.php'; ?>
@@ -91,7 +178,7 @@ $categories = $stmt->fetchAll();
         <main class="admin-main">
             <div class="page-header">
                 <h1 class="page-title"><i class="fas fa-tags"></i> Job Categories</h1>
-                <div class="page-actions"></div>
+                <div class="page-actions"><a href="<?php echo url('/admin/modules/jobs/index.php'); ?>" class="btn btn-outline">Back to Jobs</a></div>
             </div>
 
             <?php if ($session->hasFlash()): ?>
@@ -105,50 +192,65 @@ $categories = $stmt->fetchAll();
                 </div>
             <?php endif; ?>
 
-            <div class="grid two-col">
+            <div class="grid-layout">
                 <div class="form-section">
-                    <h3>Add Category</h3>
+                    <h3><i class="fas fa-plus-circle"></i> Add Category</h3>
                     <form method="post">
-                        <label>Name</label>
-                        <input type="text" name="category_name" required>
-                        <label>Slug</label>
-                        <input type="text" name="slug">
-                        <label>Description</label>
-                        <textarea name="description"></textarea>
-                        <label><input type="checkbox" name="is_active" checked> Active</label>
+                        <div class="form-group">
+                            <label>Category Name</label>
+                            <input type="text" name="category_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Slug</label>
+                            <input type="text" name="slug">
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea name="description"></textarea>
+                        </div>
+                        <div class="form-group form-check">
+                            <input type="checkbox" id="is_active" name="is_active" checked>
+                            <label for="is_active">Active</label>
+                        </div>
                         <input type="hidden" name="add_category" value="1">
-                        <button class="btn" type="submit">Add</button>
+                        <button class="btn btn-primary" type="submit"><i class="fas fa-check"></i> Add Category</button>
                     </form>
                 </div>
 
                 <div class="form-section">
-                    <h3>Existing Categories</h3>
+                    <h3><i class="fas fa-list"></i> Existing Categories (<?php echo count($categories); ?>)</h3>
                     <form method="post">
-                        <table class="table">
-                            <thead>
-                                <tr><th></th><th>Name</th><th>Slug</th><th>Jobs</th><th>Active</th></tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($categories as $c): ?>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
                                     <tr>
-                                        <td><input type="checkbox" name="selected_categories[]" value="<?php echo $c['job_category_id']; ?>"></td>
-                                        <td><?php echo e($c['category_name']); ?></td>
-                                        <td><?php echo e($c['slug']); ?></td>
-                                        <td><?php echo e($c['job_count']); ?></td>
-                                        <td><?php echo $c['is_active'] ? 'Yes' : 'No'; ?></td>
+                                        <th style="width: 40px;"><input type="checkbox" id="selectAll"></th>
+                                        <th>Name</th>
+                                        <th>Jobs</th>
+                                        <th>Status</th>
                                     </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($categories as $c): ?>
+                                        <tr>
+                                            <td><input type="checkbox" name="selected_categories[]" value="<?php echo $c['job_category_id']; ?>"></td>
+                                            <td><strong><?php echo e($c['category_name']); ?></strong></td>
+                                            <td><span class="badge"><?php echo e($c['job_count']); ?></span></td>
+                                            <td><?php echo $c['is_active'] ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-muted">Inactive</span>'; ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
 
                         <div class="bulk-actions">
-                            <select name="bulk_action">
+                            <select name="bulk_action" class="form-control">
                                 <option value="">Bulk Actions</option>
                                 <option value="activate">Activate</option>
                                 <option value="deactivate">Deactivate</option>
                                 <option value="delete">Delete</option>
                             </select>
-                            <button class="btn" type="submit">Apply</button>
+                            <button class="btn btn-primary" type="submit">Apply</button>
                         </div>
                     </form>
                 </div>
@@ -156,5 +258,6 @@ $categories = $stmt->fetchAll();
 
         </main>
     </div>
+    <script src="<?php echo url('assets/js/admin.js'); ?>"></script>
 </body>
 </html>
