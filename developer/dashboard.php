@@ -1579,7 +1579,7 @@ $due_today = $task_stats['due_today'] ?? 0;
     </div>
 
     <!-- JavaScript -->
-    <script src="<?php echo url('assets/js/admin.js'); ?>"></script>
+    <script src="<?php echo url('assets/js/developer.js'); ?>"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Alert close buttons

@@ -89,7 +89,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
         </a>
 
         <!-- Time Tracking -->
-        <div class="nav-group">
+        <!-- <div class="nav-group">
             <div class="nav-group-header">
                 <div class="nav-icon"><i class="fas fa-clock"></i></div>
                 <span class="nav-label">Time Tracking</span>
@@ -100,10 +100,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <a href="<?php echo url('developer/time-tracking.php?view=weekly'); ?>" class="nav-subitem">Weekly Report</a>
                 <a href="<?php echo url('developer/time-tracking.php?view=monthly'); ?>" class="nav-subitem">Monthly Summary</a>
             </div>
-        </div>
+        </div> -->
 
         <!-- My Reports -->
-        <div class="nav-group">
+        <!-- <div class="nav-group">
             <div class="nav-group-header">
                 <div class="nav-icon"><i class="fas fa-chart-bar"></i></div>
                 <span class="nav-label">Reports</span>
@@ -114,10 +114,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <a href="<?php echo url('developer/reports/tasks.php'); ?>" class="nav-subitem">Task Completion</a>
                 <a href="<?php echo url('developer/reports/projects.php'); ?>" class="nav-subitem">Project Progress</a>
             </div>
-        </div>
+        </div> -->
 
         <!-- Messages -->
-        <a href="<?php echo url('developer/messages.php'); ?>" class="nav-item">
+        <!-- <a href="<?php echo url('developer/messages.php'); ?>" class="nav-item">
             <div class="nav-icon"><i class="fas fa-envelope"></i></div>
             <span class="nav-label">Messages</span>
             <?php
@@ -141,10 +141,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 // Silent fail
             }
             ?>
-        </a>
+        </a> -->
 
         <!-- Resources -->
-        <div class="nav-group">
+        <!-- <div class="nav-group">
             <div class="nav-group-header">
                 <div class="nav-icon"><i class="fas fa-folder-open"></i></div>
                 <span class="nav-label">Resources</span>
@@ -155,10 +155,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <a href="<?php echo url('developer/resources/guides.php'); ?>" class="nav-subitem">Guides</a>
                 <a href="<?php echo url('developer/resources/templates.php'); ?>" class="nav-subitem">Templates</a>
             </div>
-        </div>
+        </div> -->
 
         <!-- Settings -->
-        <div class="nav-group">
+        <!-- <div class="nav-group">
             <div class="nav-group-header">
                 <div class="nav-icon"><i class="fas fa-cog"></i></div>
                 <span class="nav-label">Settings</span>
@@ -169,7 +169,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <a href="<?php echo url('developer/notifications.php'); ?>" class="nav-subitem">Notifications</a>
                 <a href="<?php echo url('developer/settings/preferences.php'); ?>" class="nav-subitem">Preferences</a>
             </div>
-        </div>
+        </div> -->
 
 
         <!-- Divider -->

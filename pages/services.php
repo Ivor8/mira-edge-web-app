@@ -130,9 +130,32 @@ $canonical_url = isset($seo_meta['canonical_url']) && $seo_meta['canonical_url']
 </script>
 <?php endif; ?>
 
+<!-- BreadcrumbList Schema JSON-LD -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+        {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "<?php echo url('/?page=home'); ?>"
+        },
+        {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Services",
+            "item": "<?php echo url('/?page=services'); ?>"
+        }
+    ]
+}
+</script>
+
 <!-- Services Hero Section -->
 <section class="services-hero">
     <div class="container">
+        <br><br><br><br>
         <div class="services-hero-content">
             <h1 class="animate-up">Our Services</h1>
             <p class="animate-up" style="animation-delay: 0.2s;">Comprehensive tech solutions tailored to transform your business and drive digital success</p>

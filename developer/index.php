@@ -13,7 +13,7 @@ $session = new Session();
 
 // Check if logged in and is developer
 if (!$session->isLoggedIn()) {
-    redirect('/login.php');
+    redirect(url('/login.php'));
 }
 
 if (!$session->isDeveloper()) {

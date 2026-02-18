@@ -350,13 +350,37 @@ if (empty($posts) && empty($search) && $category_id == 0 && $tag_id == 0) {
 </script>
 <?php endif; ?>
 
+<!-- BreadcrumbList Schema JSON-LD -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+        {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "<?php echo url('/?page=home'); ?>"
+        },
+        {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Blog",
+            "item": "<?php echo url('/?page=blog'); ?>"
+        }
+    ]
+}
+</script>
+
 <!-- Blog Hero Section -->
 <section class="blog-hero">
     <div class="container">
+        <br><br><br><br>
         <div class="blog-hero-content">
             <h1 class="animate-up">Our Blog</h1>
             <p class="animate-up" style="animation-delay: 0.2s;">Insights, tutorials, and updates from the Mira Edge team</p>
         </div>
+        <br><br>
     </div>
 </section>
 

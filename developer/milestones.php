@@ -1,7 +1,7 @@
 <?php
 /**
- * Developer Tasks - Main Entry Point
- * Redirects to the tasks management
+ * Developer Milestones - Main Entry Point
+ * Redirects to the milestones management
  */
 
 require_once '../includes/core/Database.php';
@@ -12,7 +12,7 @@ require_once '../includes/functions/helpers.php';
 $session = new Session();
 
 if (!$session->isLoggedIn()) {
-    redirect(ulr('/login.php'));
+    redirect(url('/login.php'));
 }
 
 if (!$session->isDeveloper()) {
@@ -20,6 +20,6 @@ if (!$session->isDeveloper()) {
     redirect(url('/'));
 }
 
-// Redirect to projects module tasks view
-redirect(url('/developer/modules/projects/tasks.php'));
+// Redirect to milestones module
+redirect(url('/developer/modules/projects/milestones.php'));
 ?>

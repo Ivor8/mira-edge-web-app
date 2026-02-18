@@ -145,6 +145,7 @@ if (empty($faq_items)) {
 <!-- Contact Hero Section -->
 <section class="contact-hero">
     <div class="container">
+        <br><br><br><br>
         <div class="contact-hero-content">
             <h1 class="animate-up">Get In Touch</h1>
             <p class="animate-up" style="animation-delay: 0.2s;">We'd love to hear from you. Whether you have a project in mind, need technical consultation, or want to join our team, reach out to start the conversation.</p>

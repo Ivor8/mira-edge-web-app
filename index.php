@@ -109,25 +109,28 @@ if ($session->isLoggedIn()) {
     <meta name="description" content="<?php echo e(getSetting('default_meta_description', 'Leading tech company in Cameroon offering web development, mobile apps, digital marketing and innovative tech solutions across Africa.')); ?>">
     <meta name="keywords" content="<?php echo e(getSetting('default_meta_keywords', 'web development Cameroon, mobile app development, digital marketing Cameroon, tech solutions Africa')); ?>">
     <meta name="author" content="Mira Edge Technologies">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    <meta name="googlebot" content="index, follow">
+    <meta name="bingbot" content="index, follow">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="<?php echo currentUrl(); ?>">
     <meta property="og:title" content="<?php echo e($site_name); ?>">
     <meta property="og:description" content="<?php echo e(getSetting('default_meta_description', 'Leading tech company in Cameroon offering web development, mobile apps, digital marketing and innovative tech solutions across Africa.')); ?>">
-    <meta property="og:image" content="<?php echo url('/assets/images/og-image.jpg'); ?>">
+    <meta property="og:image" content="<?php echo url('/pages/images/favicon/favicon-16x16.jpeg'); ?>">
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="<?php echo currentUrl(); ?>">
     <meta property="twitter:title" content="<?php echo e($site_name); ?>">
     <meta property="twitter:description" content="<?php echo e(getSetting('default_meta_description', 'Leading tech company in Cameroon offering web development, mobile apps, digital marketing and innovative tech solutions across Africa.')); ?>">
-    <meta property="twitter:image" content="<?php echo url('/assets/images/og-image.jpg'); ?>">
+    <meta property="twitter:image" content="<?php echo url('/pages/images/favicon/favicon-16x16.jpeg'); ?>">
     
     <!-- Favicon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="<?php echo url('/assets/images/favicon/apple-touch-icon.png'); ?>">
-    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo url('/assets/images/favicon/favicon-32x32.png'); ?>">
-    <link rel="icon" type="image/png" sizes="16x16" href="<?php echo url('/assets/images/favicon/favicon-16x16.png'); ?>">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?php echo url('/pages/images/favicon/favicon-16x16.jpeg'); ?>">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo url('/pages/images/favicon/favicon-16x16.jpeg'); ?>">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?php echo url('/pages/images/favicon/favicon-16x16.jpeg'); ?>">
     <link rel="manifest" href="<?php echo url('/assets/images/favicon/site.webmanifest'); ?>">
     
     <title><?php echo e($site_name); ?> | <?php echo $page === 'home' ? 'Leading Tech Innovation in Cameroon' : ucfirst($page); ?></title>
@@ -142,6 +145,60 @@ if ($session->isLoggedIn()) {
     
     <!-- Main CSS -->
     <link rel="stylesheet" href="<?php echo url('/pages/assets/css/main.css'); ?>">
+    
+    <!-- Organization Schema JSON-LD (Global) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "<?php echo e($site_name); ?>",
+        "url": "<?php echo url('/'); ?>",
+        "logo": "<?php echo url('/assets/images/Mira Edge Logo.png'); ?>",
+        "description": "<?php echo e(getSetting('default_meta_description', 'Leading tech company in Cameroon offering web development, mobile apps, digital marketing and innovative tech solutions across Africa.')); ?>",
+        "foundingDate": "2024-11-01",
+        "foundingLocation": "Yaounde, Cameroon",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "<?php echo e(getSetting('company_address', 'Yaounde, Cameroon')); ?>",
+            "addressLocality": "Yaounde",
+            "addressCountry": "CM"
+        },
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "<?php echo e($site_phone); ?>",
+            "contactType": "Customer Service",
+            "email": "<?php echo e($site_email); ?>"
+        },
+        "sameAs": [
+            "<?php echo e($facebook_url); ?>",
+            "<?php echo e($twitter_url); ?>",
+            "<?php echo e($linkedin_url); ?>",
+            "<?php echo e($instagram_url); ?>"
+        ],
+        "founder": {
+            "@type": "Person",
+            "name": "Engr. Nkwagoh Ivor Richard",
+            "jobTitle": "CEO & Founder",
+            "url": "<?php echo url('/?page=founder'); ?>"
+        },
+        "numberOfEmployees": {
+            "@type": "QuantitativeValue",
+            "value": "1-10"
+        },
+        "areaServed": [
+            "Cameroon",
+            "Central Africa",
+            "Africa"
+        ],
+        "knowsAbout": [
+            "Web Development",
+            "Mobile App Development",
+            "Digital Marketing",
+            "Software Development",
+            "UI/UX Design"
+        ]
+    }
+    </script>
     
     <!-- Page Specific CSS -->
     <?php if ($page === 'about'): ?>
@@ -336,7 +393,7 @@ if ($session->isLoggedIn()) {
             <div class="container">
                 <nav class="navbar">
                     <a href="<?php echo url('/'); ?>" class="logo">
-                        <img src="<?php echo url('/assets/images/Mira Edge Logo.png'); ?>" alt="Mira Edge Logo">
+                        <img src="<?php echo url('/pages/images/favicon/favicon-16x16.png'); ?>" alt="Mira Edge Logo">
                         <span>Mira Edge</span>
                     </a>
                     <ul class="nav-links">

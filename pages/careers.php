@@ -2,6 +2,7 @@
 /**
  * Careers Page - Mira Edge Technologies
  * Displays job listings and internship opportunities
+ * SEO: Includes JobPosting schema for better search visibility
  */
 
 // Get current page for pagination
@@ -303,6 +304,45 @@ if (empty($jobs)) {
 <meta name="twitter:image" content="<?php echo e($og_image); ?>">
 <meta name="twitter:site" content="@miraedgetech">
 
+<!-- JobPosting Schema JSON-LD -->
+<?php if (!empty($jobs)): ?>
+<script type="application/ld+json">
+[
+  <?php foreach ($jobs as $index => $job): ?>
+  {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    "title": "<?php echo e(addslashes($job['job_title'])); ?>",
+    "description": "<?php echo e(addslashes(substr(strip_tags($job['full_description']), 0, 300))); ?>...",
+    "jobLocation": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "<?php echo e(getSetting('company_address', 'Yaounde')); ?>",
+        "addressLocality": "Yaounde",
+        "addressCountry": "CM"
+      }
+    },
+    "baseSalary": {
+      "@type": "PriceSpecification",
+      "priceCurrency": "XAF",
+      "price": "<?php echo !empty($job['salary_range']) ? explode('-', $job['salary_range'])[0] : '200000'; ?>"
+    },
+    "employmentType": "<?php echo strtoupper(str_replace('_', ' ', $job['job_type'])); ?>",
+    "experienceRequirements": "<?php echo isset($job['experience_level']) ? ucfirst($job['experience_level']) . ' level' : 'Mid-level'; ?>",
+    "validThrough": "<?php echo $job['application_deadline'] ?? date('Y-m-d', strtotime('+30 days')); ?>",
+    "hiringOrganization": {
+      "@type": "Organization",
+      "name": "Mira Edge Technologies",
+      "sameAs": "<?php echo url('/'); ?>",
+      "logo": "<?php echo url('/assets/images/Mira Edge Logo.png'); ?>"
+    }
+  }<?php echo $index < count($jobs) - 1 ? ',' : ''; ?>
+  <?php endforeach; ?>
+]
+</script>
+<?php endif; ?>
+
 <!-- JSON-LD Schema Markup for Careers -->
 <?php if (!empty($jobs)): ?>
 <script type="application/ld+json">
@@ -342,9 +382,32 @@ if (empty($jobs)) {
 </script>
 <?php endif; ?>
 
+<!-- BreadcrumbList Schema JSON-LD -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+        {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "<?php echo url('/?page=home'); ?>"
+        },
+        {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Careers",
+            "item": "<?php echo url('/?page=careers'); ?>"
+        }
+    ]
+}
+</script>
+
 <!-- Careers Hero Section -->
 <section class="careers-hero">
     <div class="container">
+        <br><br><br><br>
         <div class="careers-hero-content">
             <h1 class="animate-up">Join Our Team</h1>
             <p class="animate-up" style="animation-delay: 0.2s;">Build your career at Mira Edge Technologies and help shape the future of technology in Africa</p>

@@ -225,9 +225,32 @@ foreach ($projects as &$project) {
 </script>
 <?php endif; ?>
 
+<!-- BreadcrumbList Schema JSON-LD -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+        {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "<?php echo url('/?page=home'); ?>"
+        },
+        {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Portfolio",
+            "item": "<?php echo url('/?page=portfolio'); ?>"
+        }
+    ]
+}
+</script>
+
 <!-- Portfolio Hero Section -->
 <section class="portfolio-hero">
     <div class="container">
+        <br><br><br><br>
         <div class="portfolio-hero-content">
             <h1 class="animate-up">Our Portfolio</h1>
             <p class="animate-up" style="animation-delay: 0.2s;">Explore our successful projects and see how we've helped businesses transform through technology</p>

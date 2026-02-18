@@ -1,0 +1,55 @@
+# Mira Edge Technologies - robots.txt
+# Generated: 2026-02-18
+# https://www.robotstxt.org/
+
+User-agent: *
+Allow: /
+Allow: /pages/
+Allow: /assets/
+Allow: /admin/*.css
+Allow: /admin/*.js
+
+# Disallow admin and sensitive areas
+Disallow: /admin/
+Disallow: /developer/
+Disallow: /api/
+Disallow: /includes/
+Disallow: /db/
+Disallow: /vendor/
+Disallow: /*.php$
+Disallow: /login.php
+Disallow: /register.php
+Disallow: /logout.php
+Disallow: /install.php
+
+# Allow search engines to crawl CSS and JavaScript
+Allow: /assets/*.css
+Allow: /assets/*.js
+Allow: /*.css$
+Allow: /*.js$
+
+# Specific search engine rules
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
+
+# Disallow bad bots
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Crawl-delay: 10
+
+# Sitemap location - Generated dynamically via sitemap.php
+# Access sitemaps at: /sitemap.php?type=main|blog|services|jobs|portfolio

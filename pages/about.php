@@ -66,7 +66,7 @@ try {
         LIMIT 1
     ");
     $stmt->execute();
-    $seo_meta = $stmt->fetch();
+    $seo_meta = $stmt->fetch() ?: [];
     
 } catch (PDOException $e) {
     error_log("About Page Error: " . $e->getMessage());
@@ -81,7 +81,7 @@ $page_description = $seo_meta['meta_description'] ?? 'Learn about Mira Edge Tech
 $page_keywords = $seo_meta['meta_keywords'] ?? 'about mira edge, cameroon tech company, digital transformation africa, tech innovation cameroon, software development company, african tech startup';
 $og_title = $seo_meta['og_title'] ?? 'About Mira Edge Technologies - Driving Innovation in Cameroon';
 $og_description = $seo_meta['og_description'] ?? 'Meet the team behind Mira Edge Technologies and learn about our mission to transform Africa through technology.';
-$og_image = $seo_meta['og_image'] ? url($seo_meta['og_image']) : url('/assets/images/about-hero.jpg');
+$og_image = $seo_meta['og_image'] ?? url('/assets/images/about-hero.jpg');
 $canonical_url = $seo_meta['canonical_url'] ?? url('/?page=about');
 
 // Milestones data (if not in database)
@@ -115,7 +115,7 @@ if (empty($milestones)) {
         [
             'title' => 'Revenue Milestone',
             'date' => '2025',
-            'description' => 'Guided Mira Edge to surpass 735,000 FCFA annual revenue while maintaining 100% Cameroonian ownership.'
+            'description' => 'Guided Mira Edge to surpass 2,235,000 FCFA annual revenue while maintaining 100% Cameroonian ownership.'
         ]
     ];
 }
@@ -180,7 +180,7 @@ if (empty($milestones)) {
 
 <!-- About Hero Section -->
 <section class="about-hero">
-    <div class="container">
+    <div class="container"><br><br>
         <div class="about-hero-content">
             <h1 class="animate-up">About Mira Edge Technologies</h1>
             <p class="animate-up" style="animation-delay: 0.2s;">Driving technological innovation in Cameroon since 2024, transforming businesses through cutting-edge digital solutions.</p>
@@ -236,7 +236,7 @@ if (empty($milestones)) {
 </section>
 
 <!-- Achievements Section -->
-<section class="achievements">
+<!-- <section class="achievements">
     <div class="container">
         <h2 class="section-title animate-up">Our Impact in Numbers</h2>
         <p class="section-subtitle animate-up">Measuring our success through tangible results</p>
@@ -268,7 +268,7 @@ if (empty($milestones)) {
             </div>
         </div>
     </div>
-</section>
+</section> -->
 
 <!-- Company History Timeline -->
 <section class="history">

@@ -86,6 +86,47 @@ try {
 <meta name="keywords" content="<?php echo e($seo_keywords); ?>">
 <link rel="canonical" href="<?php echo url('/?page=blog&post_id=' . $post_id . '&slug=' . $slug); ?>">
 
+<!-- Article Schema JSON-LD -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "<?php echo e(addslashes($seo_title)); ?>",
+    "description": "<?php echo e(addslashes($seo_description)); ?>",
+    "image": {
+        "@type": "ImageObject",
+        "url": "<?php echo !empty($post['featured_image']) ? (strpos($post['featured_image'], 'http') === 0 ? $post['featured_image'] : url($post['featured_image'])) : url('/assets/images/og-image.jpg'); ?>",
+        "height": 630,
+        "width": 1200
+    },
+    "datePublished": "<?php echo $post['published_at']; ?>",
+    "dateModified": "<?php echo !empty($post['updated_at']) ? $post['updated_at'] : $post['published_at']; ?>",
+    "author": {
+        "@type": "Person",
+        "name": "<?php echo e(addslashes($post['author_name'])); ?>",
+        "url": "<?php echo url('/?page=about'); ?>"
+    },
+    "publisher": {
+        "@type": "Organization",
+        "name": "Mira Edge Technologies",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "<?php echo url('/assets/images/Mira Edge Logo.png'); ?>",
+            "width": 250,
+            "height": 60
+        }
+    },
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "<?php echo url('/?page=blog&post_id=' . $post_id . '&slug=' . $slug); ?>"
+    },
+    "keywords": "<?php echo e(addslashes($seo_keywords)); ?>",
+    "articleBody": "<?php echo addslashes(substr(strip_tags($post['content']), 0, 500)); ?>...",
+    "wordCount": <?php echo str_word_count(strip_tags($post['content'])); ?>,
+    "articleSection": "<?php echo e($post['category_name']); ?>"
+}
+</script>
+
 <!-- Open Graph / Facebook -->
 <meta property="og:title" content="<?php echo e($seo_title); ?>">
 <meta property="og:description" content="<?php echo e($seo_description); ?>">
@@ -133,6 +174,40 @@ try {
         "@id": "<?php echo url('/?page=blog&post_id=' . $post_id . '&slug=' . $slug); ?>"
     },
     "keywords": "<?php echo e($seo_keywords); ?>"
+}
+</script>
+
+<!-- BreadcrumbList Schema JSON-LD -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+        {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "<?php echo url('/?page=home'); ?>"
+        },
+        {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Blog",
+            "item": "<?php echo url('/?page=blog'); ?>"
+        },
+        {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "<?php echo e($post['category_name']); ?>",
+            "item": "<?php echo url('/?page=blog&category=' . $post['blog_category_id']); ?>"
+        },
+        {
+            "@type": "ListItem",
+            "position": 4,
+            "name": "<?php echo e($post['title']); ?>",
+            "item": "<?php echo url('/?page=blog&post_id=' . $post_id . '&slug=' . $slug); ?>"
+        }
+    ]
 }
 </script>
 
@@ -323,6 +398,67 @@ try {
                             <div style="color: var(--dark-gray); font-size: 0.85rem;">
                                 <i class="far fa-calendar-alt"></i> <?php echo date('M d, Y', strtotime($related['published_at'])); ?>
                             </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+            <?php endif; ?>
+
+            <!-- Related Services Section for Internal Linking -->
+            <?php 
+                try {
+                    $db = Database::getInstance()->getConnection();
+                    // Get relevant services based on post category
+                    $stmt = $db->prepare("
+                        SELECT service_id, service_name, slug, short_description, featured_image, base_price
+                        FROM services
+                        WHERE is_active = 1
+                        ORDER BY RAND()
+                        LIMIT 3
+                    ");
+                    $stmt->execute();
+                    $related_services = $stmt->fetchAll() ?: [];
+                } catch (PDOException $e) {
+                    $related_services = [];
+                }
+                
+                if (!empty($related_services)):
+            ?>
+            <section style="margin-top: 60px; padding: 40px; background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)) no-repeat; border-radius: 15px; color: white;">
+                <h3 style="font-size: 1.8rem; color: white; margin-bottom: 30px;">
+                    <i class="fas fa-cogs"></i> Related Services
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px;">
+                    <?php foreach ($related_services as $service): ?>
+                    <div style="background: rgba(255,255,255,0.95); border-radius: 10px; overflow: hidden; box-shadow: var(--box-shadow); transition: transform 0.3s ease;">
+                        <div style="height: 140px; overflow: hidden;">
+                            <img src="<?php 
+                                if (!empty($service['featured_image'])) {
+                                    echo strpos($service['featured_image'], 'http') === 0 ? $service['featured_image'] : url($service['featured_image']);
+                                } else {
+                                    echo 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?ixlib=rb-4.0.3&auto=format&fit=crop&w=1070&q=80';
+                                }
+                            ?>" alt="<?php echo e($service['service_name']); ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <div style="padding: 20px; color: var(--dark-color);">
+                            <h4 style="font-size: 1rem; margin-bottom: 10px; color: var(--primary-color);">
+                                <a href="<?php echo url('/?page=services'); ?>#<?php echo e($service['slug']); ?>" style="color: var(--primary-color); text-decoration: none;">
+                                    <?php echo e($service['service_name']); ?>
+                                </a>
+                            </h4>
+                            <p style="color: var(--dark-gray); font-size: 0.9rem; margin-bottom: 15px;">
+                                <?php echo e(substr($service['short_description'], 0, 70)) . '...'; ?>
+                            </p>
+                            <?php if (!empty($service['base_price'])): ?>
+                            <div style="font-size: 0.95rem; font-weight: 600; color: var(--primary-color); margin-bottom: 10px;">
+                                Starting from <?php echo e($service['base_price']); ?> XAF
+                            </div>
+                            <?php endif; ?>
+                            <a href="<?php echo url('/?page=services'); ?>#<?php echo e($service['slug']); ?>" style="display: inline-block; background: var(--primary-color); color: white; padding: 8px 16px; border-radius: 5px; text-decoration: none; font-size: 0.9rem; transition: background 0.3s ease;">
+                                Learn More <i class="fas fa-arrow-right"></i>
+                            </a>
                         </div>
                     </div>
                     <?php endforeach; ?>

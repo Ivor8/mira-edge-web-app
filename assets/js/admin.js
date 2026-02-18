@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
             adminSidebar.classList.toggle('active');
             this.classList.toggle('active');
             
+            // Only adjust margin on larger screens
             if (window.innerWidth > 1200) {
                 if (adminSidebar.classList.contains('active')) {
                     adminMain.style.marginLeft = '0';
@@ -30,16 +31,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // Close sidebar when clicking outside on mobile
-        if (window.innerWidth <= 1200) {
-            document.addEventListener('click', function(event) {
-                if (!adminSidebar.contains(event.target) && 
-                    !sidebarToggle.contains(event.target) && 
-                    adminSidebar.classList.contains('active')) {
-                    adminSidebar.classList.remove('active');
-                    sidebarToggle.classList.remove('active');
-                }
-            });
-        }
+        document.addEventListener('click', function(event) {
+            if (!adminSidebar.contains(event.target) && 
+                !sidebarToggle.contains(event.target) && 
+                adminSidebar.classList.contains('active') &&
+                window.innerWidth <= 1200) {
+                adminSidebar.classList.remove('active');
+                sidebarToggle.classList.remove('active');
+            }
+        });
     }
     
     // ============================================
@@ -266,7 +266,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function handleResponsive() {
         if (window.innerWidth <= 1200) {
-            adminSidebar.classList.remove('active');
+            // On mobile, sidebar should be hidden by default but toggleable
+            if (adminSidebar && !sidebarToggle.classList.contains('active')) {
+                adminSidebar.classList.remove('active');
+            }
+        } else {
+            // On desktop, remove active class to show sidebar by default
+            if (adminSidebar) adminSidebar.classList.remove('active');
             if (sidebarToggle) sidebarToggle.classList.remove('active');
         }
     }
