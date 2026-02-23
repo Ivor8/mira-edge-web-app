@@ -923,15 +923,25 @@ $service = $stmt->fetch();
                             
                             <!-- SEO Settings -->
                             <div class="form-section">
-                                <h4 class="form-section-title">
-                                    <i class="fas fa-search"></i>
-                                    SEO Settings
-                                </h4>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg); padding-bottom: var(--space-sm); border-bottom: 2px solid var(--color-gray-200);">
+                                    <h4 class="form-section-title" style="margin: 0; border: none; padding: 0;">
+                                        <i class="fas fa-search"></i>
+                                        SEO Settings
+                                    </h4>
+                                    <button type="button" id="generateAllSeo" class="btn btn-outline" style="flex-shrink: 0;">
+                                        <i class="fas fa-magic"></i> Auto-Generate All
+                                    </button>
+                                </div>
                                 
                                 <div class="form-group">
-                                    <label for="seo_title" class="form-label">
-                                        SEO Title
-                                    </label>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; gap: var(--space-md);">
+                                        <label for="seo_title" class="form-label" style="margin: 0;">
+                                            SEO Title
+                                        </label>
+                                        <button type="button" id="generateSeoTitle" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.75rem; flex-shrink: 0;">
+                                            <i class="fas fa-bolt"></i> Generate
+                                        </button>
+                                    </div>
                                     <input type="text" 
                                            id="seo_title" 
                                            name="seo_title" 
@@ -943,9 +953,14 @@ $service = $stmt->fetch();
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="seo_description" class="form-label">
-                                        SEO Description
-                                    </label>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; gap: var(--space-md);">
+                                        <label for="seo_description" class="form-label" style="margin: 0;">
+                                            SEO Description
+                                        </label>
+                                        <button type="button" id="generateSeoDesc" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.75rem; flex-shrink: 0;">
+                                            <i class="fas fa-bolt"></i> Generate
+                                        </button>
+                                    </div>
                                     <textarea id="seo_description" 
                                               name="seo_description" 
                                               class="form-control" 
@@ -1003,22 +1018,61 @@ $service = $stmt->fetch();
                 }
             });
             
+            // Generate SEO Title
+            document.getElementById('generateSeoTitle')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                const serviceName = document.getElementById('service_name').value;
+                if (serviceName) {
+                    const seoTitle = (serviceName + ' | Mira Edge Technologies').substring(0, 60);
+                    document.getElementById('seo_title').value = seoTitle;
+                    updateCharCounter('seo_title', 'seoTitleCounter', 60);
+                }
+            });
+            
+            // Generate SEO Description
+            document.getElementById('generateSeoDesc')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                const shortDesc = document.getElementById('short_description').value;
+                if (shortDesc) {
+                    const seoDesc = shortDesc.substring(0, 160);
+                    document.getElementById('seo_description').value = seoDesc;
+                    updateCharCounter('seo_description', 'seoDescCounter', 160);
+                }
+            });
+            
+            // Generate All SEO Fields
+            document.getElementById('generateAllSeo')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('generateSeoTitle').click();
+                document.getElementById('generateSeoDesc').click();
+            });
+            
+            // Update character counter
+            function updateCharCounter(inputId, counterId, maxLength) {
+                const input = document.getElementById(inputId);
+                const counter = document.getElementById(counterId);
+                if (input && counter) {
+                    const length = input.value.length;
+                    counter.textContent = `${length}/${maxLength}`;
+                }
+            }
+            
             // Image preview
             const featuredImageInput = document.getElementById('featured_image');
             const imagePreview = document.getElementById('imagePreview');
-            const previewImg = imagePreview.querySelector('img');
+            const previewImg = imagePreview?.querySelector('img');
             
             if (featuredImageInput) {
                 featuredImageInput.addEventListener('change', function(e) {
                     const file = e.target.files[0];
-                    if (file) {
+                    if (file && imagePreview && previewImg) {
                         const reader = new FileReader();
                         reader.onload = function(e) {
                             previewImg.src = e.target.result;
                             imagePreview.style.display = 'block';
                         }
                         reader.readAsDataURL(file);
-                    } else {
+                    } else if (imagePreview) {
                         imagePreview.style.display = 'none';
                     }
                 });

@@ -683,15 +683,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 
                                 <!-- SEO Settings -->
                                 <div class="form-section">
-                                    <h4 class="form-section-title">
-                                        <i class="fas fa-search"></i>
-                                        SEO Settings
-                                    </h4>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg); padding-bottom: var(--space-sm); border-bottom: 2px solid var(--color-gray-200);">
+                                        <h4 class="form-section-title" style="margin: 0; border: none; padding: 0;">
+                                            <i class="fas fa-search"></i>
+                                            SEO Settings
+                                        </h4>
+                                        <button type="button" id="generateAllSeo" class="btn btn-outline" style="flex-shrink: 0;">
+                                            <i class="fas fa-magic"></i> Auto-Generate All
+                                        </button>
+                                    </div>
                                     
                                     <div class="form-group">
-                                        <label for="seo_title" class="form-label">
-                                            SEO Title
-                                        </label>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; gap: var(--space-md);">
+                                            <label for="seo_title" class="form-label" style="margin: 0;">
+                                                SEO Title
+                                            </label>
+                                            <button type="button" id="generateSeoTitle" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.75rem; flex-shrink: 0;">
+                                                <i class="fas fa-bolt"></i> Generate
+                                            </button>
+                                        </div>
                                         <input type="text" 
                                                id="seo_title" 
                                                name="seo_title" 
@@ -703,9 +713,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </div>
                                     
                                     <div class="form-group">
-                                        <label for="seo_description" class="form-label">
-                                            SEO Description
-                                        </label>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; gap: var(--space-md);">
+                                            <label for="seo_description" class="form-label" style="margin: 0;">
+                                                SEO Description
+                                            </label>
+                                            <button type="button" id="generateSeoDesc" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.75rem; flex-shrink: 0;">
+                                                <i class="fas fa-bolt"></i> Generate
+                                            </button>
+                                        </div>
                                         <textarea id="seo_description" 
                                                   name="seo_description" 
                                                   class="form-control" 
@@ -767,52 +782,106 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             });
             
-            // Auto-generate SEO fields
+            // Generate SEO Title
+            document.getElementById('generateSeoTitle')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                const serviceName = document.getElementById('service_name').value;
+                if (serviceName) {
+                    const seoTitle = (serviceName + ' | Mira Edge Technologies').substring(0, 60);
+                    document.getElementById('seo_title').value = seoTitle;
+                    updateCharCounter('seo_title', 'seoTitleCounter', 60);
+                }
+            });
+            
+            // Generate SEO Description
+            document.getElementById('generateSeoDesc')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                const shortDesc = document.getElementById('short_description').value;
+                if (shortDesc) {
+                    const seoDesc = shortDesc.substring(0, 160);
+                    document.getElementById('seo_description').value = seoDesc;
+                    updateCharCounter('seo_description', 'seoDescCounter', 160);
+                }
+            });
+            
+            // Generate All SEO Fields
+            document.getElementById('generateAllSeo')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('generateSeoTitle').click();
+                document.getElementById('generateSeoDesc').click();
+            });
+            
+            // Update character counter
+            function updateCharCounter(inputId, counterId, maxLength) {
+                const input = document.getElementById(inputId);
+                const counter = document.getElementById(counterId);
+                if (input && counter) {
+                    const length = input.value.length;
+                    counter.textContent = `${length}/${maxLength}`;
+                }
+            }
+            
+            // Auto-update SEO fields on input change
             const serviceNameInput = document.getElementById('service_name');
             const shortDescInput = document.getElementById('short_description');
             const seoTitleInput = document.getElementById('seo_title');
             const seoDescInput = document.getElementById('seo_description');
             
-            function updateSeoFields() {
-                // Update SEO Title
-                if (!seoTitleInput.value && serviceNameInput.value) {
-                    seoTitleInput.value = serviceNameInput.value + ' | Mira Edge Technologies';
+            // Track if user manually edited these fields
+            let seoTitleManuallyEdited = seoTitleInput?.value?.length > 0;
+            let seoDescManuallyEdited = seoDescInput?.value?.length > 0;
+            
+            seoTitleInput?.addEventListener('change', function() {
+                seoTitleManuallyEdited = true;
+            });
+            
+            seoDescInput?.addEventListener('change', function() {
+                seoDescManuallyEdited = true;
+            });
+            
+            function autoUpdateSeoFields() {
+                // Auto-generate SEO Title if not manually edited
+                if (!seoTitleManuallyEdited && serviceNameInput?.value) {
+                    seoTitleInput.value = (serviceNameInput.value + ' | Mira Edge Technologies').substring(0, 60);
+                    updateCharCounter('seo_title', 'seoTitleCounter', 60);
                 }
                 
-                // Update SEO Description
-                if (!seoDescInput.value && shortDescInput.value) {
+                // Auto-generate SEO Description if not manually edited
+                if (!seoDescManuallyEdited && shortDescInput?.value) {
                     seoDescInput.value = shortDescInput.value.substring(0, 160);
+                    updateCharCounter('seo_description', 'seoDescCounter', 160);
                 }
             }
             
-            serviceNameInput.addEventListener('input', updateSeoFields);
-            shortDescInput.addEventListener('input', updateSeoFields);
+            serviceNameInput?.addEventListener('input', autoUpdateSeoFields);
+            shortDescInput?.addEventListener('input', autoUpdateSeoFields);
             
             // Image preview
             const featuredImageInput = document.getElementById('featured_image');
             const imagePreview = document.getElementById('imagePreview');
-            const previewImg = imagePreview.querySelector('img');
+            const previewImg = imagePreview?.querySelector('img');
             
-            featuredImageInput.addEventListener('change', function(e) {
+            featuredImageInput?.addEventListener('change', function(e) {
                 const file = e.target.files[0];
-                if (file) {
+                if (file && imagePreview && previewImg) {
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         previewImg.src = e.target.result;
                         imagePreview.style.display = 'block';
                     }
                     reader.readAsDataURL(file);
-                } else {
+                } else if (imagePreview) {
                     imagePreview.style.display = 'none';
                 }
             });
             
             // Character counters
-            function setupCharCounter(textarea, counterId, maxLength) {
+            function setupCharCounter(input, counterId, maxLength) {
                 const counter = document.getElementById(counterId);
+                if (!counter || !input) return;
                 
                 function updateCounter() {
-                    const length = textarea.value.length;
+                    const length = input.value.length;
                     counter.textContent = `${length}/${maxLength}`;
                     
                     if (length > maxLength * 0.9) {
@@ -824,17 +893,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
                 
-                textarea.addEventListener('input', updateCounter);
+                input.addEventListener('input', updateCounter);
                 updateCounter();
             }
             
-            setupCharCounter(shortDescInput, 'shortDescCounter', 500);
-            setupCharCounter(seoTitleInput, 'seoTitleCounter', 60);
-            setupCharCounter(seoDescInput, 'seoDescCounter', 160);
+            setupCharCounter(document.getElementById('short_description'), 'shortDescCounter', 500);
+            setupCharCounter(document.getElementById('seo_title'), 'seoTitleCounter', 60);
+            setupCharCounter(document.getElementById('seo_description'), 'seoDescCounter', 160);
             
             // Form validation
             const form = document.getElementById('addServiceForm');
-            form.addEventListener('submit', function(e) {
+            form?.addEventListener('submit', function(e) {
                 let valid = true;
                 
                 // Check required fields

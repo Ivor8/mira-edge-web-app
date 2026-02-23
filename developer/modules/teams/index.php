@@ -257,6 +257,7 @@ $upcoming_milestones = $stmt->fetchAll();
             margin-bottom: 0.5rem;
             position: relative;
             z-index: 1;
+            color:white;
         }
 
         .team-department {

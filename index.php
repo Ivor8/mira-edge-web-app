@@ -73,17 +73,17 @@ if ($page === 'blog' && (isset($_GET['post_id']) || (isset($_GET['action']) && $
 // If user is logged in and trying to access login/register, redirect
 if ($session->isLoggedIn() && in_array($page, ['login', 'register'])) {
     if ($session->isAdmin()) {
-        redirect('/admin/dashboard.php');
+        redirect(url('/admin/dashboard.php'));
     } elseif ($session->isDeveloper()) {
-        redirect('/developer/dashboard.php');
+        redirect(url('/developer/dashboard.php'));
     } else {
-        redirect('/');
+        redirect(url('/'));
     }
 }
 
 // If user is not logged in and trying to access dashboard
 if (!$session->isLoggedIn() && in_array($page, ['admin', 'developer'])) {
-    redirect('/login.php');
+    redirect(url('/login.php'));
 }
 
 // Check role-based access
@@ -92,12 +92,12 @@ if ($session->isLoggedIn()) {
     
     if ($page === 'admin' && !$session->isAdmin()) {
         $session->setFlash('error', 'Access denied. Admin privileges required.');
-        redirect('/');
+        redirect(url('/'));
     }
     
     if ($page === 'developer' && !$session->isDeveloper()) {
         $session->setFlash('error', 'Access denied. Developer privileges required.');
-        redirect('/');
+        redirect(url('/'));
     }
 }
 ?>

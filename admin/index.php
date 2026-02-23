@@ -15,7 +15,7 @@ $db = Database::getInstance()->getConnection();
 
 // Check if user is logged in and is admin
 if (!$session->isLoggedIn()) {
-    redirect('/login.php');
+    redirect(url('/login.php'));
 }
 
 if (!$session->isAdmin()) {

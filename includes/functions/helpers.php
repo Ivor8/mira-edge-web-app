@@ -28,13 +28,32 @@ function url($path = '') {
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $host = $_SERVER['HTTP_HOST'];
 
-    // Detect project root folder automatically
-    $projectFolder = explode('/', trim($_SERVER['SCRIPT_NAME'], '/'))[0];
+    // Detect if running locally (support localhost, 127.0.0.1, ::1) or if project sits in a subfolder
+    $isLocal = false;
+    if ($host === 'localhost' || strpos($host, 'localhost') !== false) {
+        $isLocal = true;
+    }
+    if ($host === '127.0.0.1' || strpos($host, '127.0.0.1') !== false) {
+        $isLocal = true;
+    }
+    if ($host === '::1') {
+        $isLocal = true;
+    }
+
+    // If the request URI contains the project folder, prefer that as base
+    $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+    if (strpos($requestUri, '/Mira-Edge') !== false) {
+        $base = '/Mira-Edge';
+    } elseif ($isLocal) {
+        $base = '/Mira-Edge';
+    } else {
+        $base = '';
+    }
 
     // Remove leading slash from path
     $path = ltrim($path, '/');
 
-    return $protocol . '://' . $host . '/' . $projectFolder . '/' . $path;
+    return $protocol . '://' . $host . $base . '/' . $path;
 }
 
 /**
@@ -206,6 +225,34 @@ function getSetting($key, $default = '') {
         return $result ? $result['setting_value'] : $default;
     } catch (PDOException $e) {
         return $default;
+    }
+}
+
+/**
+ * Update site setting
+ */
+function updateSetting($key, $value) {
+    try {
+        $db = Database::getInstance()->getConnection();
+        
+        // Check if setting exists
+        $stmt = $db->prepare("SELECT setting_id FROM site_settings WHERE setting_key = ?");
+        $stmt->execute([$key]);
+        $exists = $stmt->fetch();
+        
+        if ($exists) {
+            // Update existing setting
+            $stmt = $db->prepare("UPDATE site_settings SET setting_value = ? WHERE setting_key = ?");
+            $stmt->execute([$value, $key]);
+        } else {
+            // Insert new setting
+            $stmt = $db->prepare("INSERT INTO site_settings (setting_key, setting_value) VALUES (?, ?)");
+            $stmt->execute([$key, $value]);
+        }
+        
+        return true;
+    } catch (PDOException $e) {
+        return false;
     }
 }
 ?>

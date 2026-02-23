@@ -455,16 +455,34 @@ async function submitContactForm(event) {
     };
     
     try {
-        // Simulate API call - replace with actual endpoint
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Show success modal
-        openSuccessModal();
-        event.target.reset();
+        const response = await fetch('<?php echo url('/api/contact.php'); ?>', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+
+        const text = await response.text();
+        let result;
+        try {
+            result = JSON.parse(text);
+        } catch (parseError) {
+            console.error('Non-JSON response from contact API:', text);
+            throw new Error('Server returned invalid response. See console for details.');
+        }
+
+        if (result.success) {
+            // Show success modal
+            openSuccessModal();
+            event.target.reset();
+        } else {
+            throw new Error(result.message || 'Failed to send message');
+        }
         
     } catch (error) {
         console.error('Error:', error);
-        showNotification('error', 'Failed to send message. Please try again or contact us directly.');
+        showNotification('error', error.message || 'Failed to send message. Please try again or contact us directly.');
     } finally {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;

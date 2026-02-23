@@ -397,7 +397,16 @@ if (empty($posts) && empty($search) && $category_id == 0 && $tag_id == 0) {
                             <div class="blog-post-image">
                                 <img src="<?php 
                                     if (!empty($post['featured_image'])) {
-                                        echo strpos($post['featured_image'], 'http') === 0 ? $post['featured_image'] : url($post['featured_image']);
+                                        if (strpos($post['featured_image'], 'http') === 0) {
+                                            echo $post['featured_image'];
+                                        } elseif (strpos($post['featured_image'], '/Mira-Edge/') === 0) {
+                                            // Already has base path, just add protocol and host
+                                            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                                            $host = $_SERVER['HTTP_HOST'];
+                                            echo $protocol . '://' . $host . $post['featured_image'];
+                                        } else {
+                                            echo url($post['featured_image']);
+                                        }
                                     } else {
                                         echo 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80';
                                     }

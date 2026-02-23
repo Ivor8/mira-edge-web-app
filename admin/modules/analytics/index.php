@@ -26,6 +26,37 @@ if (!$session->isAdmin()) {
 $user = $session->getUser();
 $user_id = $user['user_id'];
 
+// Handle Google Analytics configuration save
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_ga_config'])) {
+    $ga_property_id = trim($_POST['ga_property_id'] ?? '');
+    $ga_api_key = trim($_POST['ga_api_key'] ?? '');
+
+    // Validate GA Property ID format
+    if (!empty($ga_property_id) && !preg_match('/^G-[A-Z0-9]+$/', $ga_property_id)) {
+        $session->setFlash('error', 'Invalid Google Analytics Property ID format. Should be G-XXXXXXXXXX');
+    } else {
+        // Save settings
+        updateSetting('google_analytics_id', $ga_property_id);
+        updateSetting('google_analytics_api_key', $ga_api_key);
+
+        $session->setFlash('success', 'Google Analytics configuration saved successfully.');
+
+        // Log activity
+        $stmt = $db->prepare("
+            INSERT INTO activity_logs (user_id, activity_type, description, ip_address, user_agent)
+            VALUES (?, 'ga_config_updated', ?, ?, ?)
+        ");
+        $stmt->execute([
+            $user_id,
+            'Google Analytics configuration updated',
+            $_SERVER['REMOTE_ADDR'] ?? '',
+            $_SERVER['HTTP_USER_AGENT'] ?? ''
+        ]);
+
+        // Redirect to refresh the page
+        redirect(url('/admin/modules/analytics/index.php'));
+    }
+}
 
 // Date range filter
 $date_from = $_GET['from'] ?? date('Y-m-d', strtotime('-30 days'));
@@ -75,6 +106,18 @@ $daily_visits = $stmt->fetchAll();
 $stmt = $db->prepare("SELECT * FROM page_visits WHERE DATE(visited_at) BETWEEN ? AND ? ORDER BY visited_at DESC LIMIT 20");
 $stmt->execute([$date_from, $date_to]);
 $recent_visits = $stmt->fetchAll();
+
+// Check if Google Analytics is configured
+$ga_property_id = getSetting('google_analytics_id', '');
+$ga_api_key = getSetting('google_analytics_api_key', '');
+$ga_connected = !empty($ga_property_id) && !empty($ga_api_key);
+
+// Get Google Analytics settings
+$ga_settings = [
+    'property_id' => $ga_property_id,
+    'api_key' => $ga_api_key,
+    'connected' => $ga_connected
+];
 
 ?>
 <!DOCTYPE html>
@@ -161,6 +204,74 @@ $recent_visits = $stmt->fetchAll();
             border-bottom: 2px solid #f0f0f0;
             padding-bottom: 10px;
         }
+        .ga-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        .ga-status.connected {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #4caf50;
+        }
+        .ga-status.not-connected {
+            background: #fff3e0;
+            color: #f57c00;
+            border: 1px solid #ff9800;
+        }
+        .ga-metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .ga-metric {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .ga-metric h4 {
+            margin: 0 0 10px 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .ga-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2196f3;
+            margin-bottom: 5px;
+        }
+        .ga-keywords, .ga-sources {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .ga-keywords ul, .ga-sources ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .ga-keywords li, .ga-sources li {
+            padding: 3px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .ga-setup-instructions ol {
+            padding-left: 20px;
+        }
+        .ga-setup-instructions li {
+            margin-bottom: 8px;
+        }
+        .ga-setup-instructions a {
+            color: #2196f3;
+            text-decoration: none;
+        }
+        .ga-config-form h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -200,6 +311,68 @@ $recent_visits = $stmt->fetchAll();
                     <h3>Today's Visits</h3>
                     <div class="stat-value"><?php echo $today; ?></div>
                 </div>
+            </div>
+
+            <!-- Google Analytics Integration -->
+            <div class="list-section">
+                <h3><i class="fab fa-google"></i> Google Analytics Integration</h3>
+                <?php if ($ga_connected): ?>
+                    <div class="ga-status connected">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Connected to Google Analytics (Property: <?php echo e($ga_property_id); ?>)</span>
+                    </div>
+                    <div class="ga-metrics" style="margin-top: 20px;">
+                        <div class="ga-metric-grid">
+                            <div class="ga-metric">
+                                <h4>Organic Search Traffic</h4>
+                                <div class="ga-value" id="ga-organic">Loading...</div>
+                                <small>Last 30 days</small>
+                            </div>
+                            <div class="ga-metric">
+                                <h4>Top Keywords</h4>
+                                <div class="ga-keywords" id="ga-keywords">Loading...</div>
+                            </div>
+                            <div class="ga-metric">
+                                <h4>Traffic Sources</h4>
+                                <div class="ga-sources" id="ga-sources">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <div class="ga-status not-connected">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Google Analytics Not Connected</span>
+                    </div>
+                    <div class="ga-setup-instructions" style="margin-top: 20px;">
+                        <h4>How to Connect Google Analytics:</h4>
+                        <ol>
+                            <li><strong>Create Google Analytics Account:</strong> Go to <a href="https://analytics.google.com" target="_blank">analytics.google.com</a></li>
+                            <li><strong>Create Property:</strong> Add your website domain</li>
+                            <li><strong>Get Property ID:</strong> Copy the "G-XXXXXXXXXX" ID</li>
+                            <li><strong>Get API Key:</strong> Go to Google Cloud Console → APIs & Services → Credentials</li>
+                            <li><strong>Configure Below:</strong> Enter your Property ID and API Key</li>
+                        </ol>
+
+                        <form method="post" class="ga-config-form" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                            <h4>Configure Google Analytics</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                <div>
+                                    <label for="ga_property_id" style="display: block; margin-bottom: 5px; font-weight: 500;">Property ID (G-XXXXXXXXXX)</label>
+                                    <input type="text" id="ga_property_id" name="ga_property_id" value="<?php echo e($ga_property_id); ?>"
+                                           placeholder="G-XXXXXXXXXX" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                                <div>
+                                    <label for="ga_api_key" style="display: block; margin-bottom: 5px; font-weight: 500;">API Key</label>
+                                    <input type="password" id="ga_api_key" name="ga_api_key" value="<?php echo e($ga_api_key); ?>"
+                                           placeholder="Your API Key" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                            </div>
+                            <button type="submit" name="save_ga_config" class="btn" style="background: #4285f4; color: white; border: none;">
+                                <i class="fas fa-save"></i> Save Configuration
+                            </button>
+                        </form>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <!-- Daily Traffic Chart -->
@@ -352,6 +525,51 @@ $recent_visits = $stmt->fetchAll();
                 }
             }
         });
+
+        <?php if ($ga_connected): ?>
+        // Google Analytics Data Fetching
+        async function fetchGoogleAnalytics() {
+            try {
+                // This is a placeholder for Google Analytics API integration
+                // In a real implementation, you would use the Google Analytics Data API
+
+                // For now, show placeholder data
+                document.getElementById('ga-organic').textContent = 'API Integration Required';
+                document.getElementById('ga-keywords').innerHTML = '<ul><li>Setup required</li><li>API key needed</li></ul>';
+                document.getElementById('ga-sources').innerHTML = '<ul><li>Google: Setup required</li><li>Direct: Setup required</li></ul>';
+
+                // Uncomment and modify this when you have the API set up:
+                /*
+                const response = await fetch('/admin/api/ga-data.php', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // Update the UI with real data
+                    document.getElementById('ga-organic').textContent = data.organicTraffic || '0';
+                    document.getElementById('ga-keywords').innerHTML = data.topKeywords.map(k =>
+                        `<li>${k.keyword}: ${k.clicks} clicks</li>`
+                    ).join('');
+                    document.getElementById('ga-sources').innerHTML = data.trafficSources.map(s =>
+                        `<li>${s.source}: ${s.sessions} sessions</li>`
+                    ).join('');
+                }
+                */
+
+            } catch (error) {
+                console.error('GA fetch error:', error);
+                document.getElementById('ga-organic').textContent = 'Error loading data';
+            }
+        }
+
+        // Load GA data when page loads
+        fetchGoogleAnalytics();
+        <?php endif; ?>
     </script>
 </body>
 </html>

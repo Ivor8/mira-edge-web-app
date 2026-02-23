@@ -212,7 +212,7 @@ try {
 </script>
 
 <!-- Single Post Section -->
-<section class="single-post">
+<section class="single-post" style="padding-top: 150px;">
     <div class="container">
         <div class="single-post-container">
 
@@ -233,12 +233,24 @@ try {
             </header>
             
             <!-- Featured Image -->
-            <?php if (!empty($post['featured_image'])): ?>
             <div class="single-post-featured-image">
-                <img src="<?php echo strpos($post['featured_image'], 'http') === 0 ? $post['featured_image'] : url($post['featured_image']); ?>" 
-                     alt="<?php echo e($post['image_alt'] ?? $post['title']); ?>">
+                <img src="<?php 
+                    if (!empty($post['featured_image'])) {
+                        if (strpos($post['featured_image'], 'http') === 0) {
+                            echo $post['featured_image'];
+                        } elseif (strpos($post['featured_image'], '/Mira-Edge/') === 0) {
+                            // Already has base path, just add protocol and host
+                            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                            $host = $_SERVER['HTTP_HOST'];
+                            echo $protocol . '://' . $host . $post['featured_image'];
+                        } else {
+                            echo url($post['featured_image']);
+                        }
+                    } else {
+                        echo 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80';
+                    }
+                ?>" alt="<?php echo e($post['image_alt'] ?? $post['title']); ?>">
             </div>
-            <?php endif; ?>
             
             <!-- Post Content -->
             <div class="single-post-content">
@@ -382,7 +394,16 @@ try {
                         <div style="height: 150px; overflow: hidden;">
                             <img src="<?php 
                                 if (!empty($related['featured_image'])) {
-                                    echo strpos($related['featured_image'], 'http') === 0 ? $related['featured_image'] : url($related['featured_image']);
+                                    if (strpos($related['featured_image'], 'http') === 0) {
+                                        echo $related['featured_image'];
+                                    } elseif (strpos($related['featured_image'], '/Mira-Edge/') === 0) {
+                                        // Already has base path, just add protocol and host
+                                        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                                        $host = $_SERVER['HTTP_HOST'];
+                                        echo $protocol . '://' . $host . $related['featured_image'];
+                                    } else {
+                                        echo url($related['featured_image']);
+                                    }
                                 } else {
                                     echo 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80';
                                 }
@@ -436,7 +457,16 @@ try {
                         <div style="height: 140px; overflow: hidden;">
                             <img src="<?php 
                                 if (!empty($service['featured_image'])) {
-                                    echo strpos($service['featured_image'], 'http') === 0 ? $service['featured_image'] : url($service['featured_image']);
+                                    if (strpos($service['featured_image'], 'http') === 0) {
+                                        echo $service['featured_image'];
+                                    } elseif (strpos($service['featured_image'], '/Mira-Edge/') === 0) {
+                                        // Already has base path, just add protocol and host
+                                        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                                        $host = $_SERVER['HTTP_HOST'];
+                                        echo $protocol . '://' . $host . $service['featured_image'];
+                                    } else {
+                                        echo url($service['featured_image']);
+                                    }
                                 } else {
                                     echo 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?ixlib=rb-4.0.3&auto=format&fit=crop&w=1070&q=80';
                                 }
@@ -489,7 +519,7 @@ async function submitComment(event, postId) {
     };
     
     try {
-        const response = await fetch('<?php echo url('/api/comments.php'); ?>', {
+        const response = await fetch('<?php echo url('api/comments.php'); ?>', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

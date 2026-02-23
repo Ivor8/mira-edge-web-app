@@ -7,6 +7,15 @@ class Session {
     
     public function __construct() {
         if (session_status() === PHP_SESSION_NONE) {
+            // Set session cookie parameters
+            session_set_cookie_params([
+                'lifetime' => 0, // Until browser closes
+                'path' => '/',
+                'domain' => $_SERVER['HTTP_HOST'],
+                'secure' => isset($_SERVER['HTTPS']),
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
             session_start();
         }
         

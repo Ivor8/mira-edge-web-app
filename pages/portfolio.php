@@ -264,8 +264,9 @@ foreach ($projects as &$project) {
     <div class="container">
         <div class="featured-container animate-up">
             <div class="featured-image">
-                <img src="<?php echo !empty($featured_project['featured_image']) ? url($featured_project['featured_image']) : 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2069&q=80'; ?>" 
-                     alt="<?php echo e($featured_project['title']); ?>">
+                <img src="<?php echo !empty($featured_project['featured_image']) ? url(ltrim($featured_project['featured_image'], '/')) : 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2069&q=80'; ?>" 
+                     alt="<?php echo e($featured_project['title']); ?>"
+                     onerror="this.src='https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2069&q=80'">
             </div>
             <div class="featured-content">
                 <span class="featured-badge">Featured Project</span>
@@ -363,8 +364,9 @@ foreach ($projects as &$project) {
                  style="animation-delay: <?php echo $index * 0.1; ?>s;">
                 
                 <div class="portfolio-image">
-                    <img src="<?php echo !empty($project['featured_image']) ? url($project['featured_image']) : 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=2072&q=80'; ?>" 
-                         alt="<?php echo e($project['title']); ?>">
+                    <img src="<?php echo !empty($project['featured_image']) ? url(ltrim($project['featured_image'], '/')) : 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=2072&q=80'; ?>" 
+                         alt="<?php echo e($project['title']); ?>"
+                         onerror="this.src='https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=2072&q=80'">
                     
                     <div class="portfolio-overlay">
                         <div class="portfolio-overlay-content">
@@ -474,8 +476,8 @@ function openProjectModal(project) {
     
     // Set header content
     modalImage.src = project.featured_image ? 
-        (project.featured_image.startsWith('http') ? project.featured_image : '<?php echo url('/'); ?>' + project.featured_image) : 
-        'https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=2072&q=80';
+        (project.featured_image.startsWith('http') ? project.featured_image : '<?php echo url('/'); ?>' + project.featured_image.replace(/^\//, '')) : 
+        'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2069&q=80';
     modalImage.alt = project.title || 'Project Image';
     modalTitle.textContent = project.title || 'Project Title';
     modalCategory.textContent = project.category_name || 'Web Development';
@@ -501,8 +503,8 @@ function openProjectModal(project) {
                 <h3>Project Gallery</h3>
                 <div class="project-gallery">
                     ${project.images.map(img => `
-                        <div class="gallery-image" onclick="openImageModal('${img.image_url.startsWith('http') ? img.image_url : '<?php echo url('/'); ?>' + img.image_url}')">
-                            <img src="${img.image_url.startsWith('http') ? img.image_url : '<?php echo url('/'); ?>' + img.image_url}" 
+                        <div class="gallery-image" onclick="openImageModal('${img.image_url.startsWith('http') ? img.image_url : '<?php echo url('/'); ?>' + img.image_url.replace(/^\//, '')}')">
+                            <img src="${img.image_url.startsWith('http') ? img.image_url : '<?php echo url('/'); ?>' + img.image_url.replace(/^\//, '')}" 
                                  alt="${escapeHtml(img.alt_text || 'Project image')}">
                         </div>
                     `).join('')}

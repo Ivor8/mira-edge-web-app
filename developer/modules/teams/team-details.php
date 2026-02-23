@@ -779,6 +779,9 @@ $milestones = $stmt->fetchAll();
                 justify-content: center;
             }
         }
+        .team-name{
+            color: white !important;
+        }
     </style>
 </head>
 <body>
@@ -793,7 +796,7 @@ $milestones = $stmt->fetchAll();
                 <div class="team-header">
                     <div class="team-header-content">
                         <div class="team-title">
-                            <h1><?php echo e($team['team_name']); ?></h1>
+                            <h1 class="team-name"><?php echo e($team['team_name']); ?></h1>
                             <span class="team-department">
                                 <?php echo ucfirst(str_replace('_', ' ', $team['department'])); ?>
                             </span>

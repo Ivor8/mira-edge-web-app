@@ -1201,12 +1201,22 @@ if ($post_id > 0) {
                             
                             <!-- SEO Settings -->
                             <div class="form-section">
-                                <h3 class="form-section-title">
-                                    <i class="fas fa-search"></i> SEO Settings
-                                </h3>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg); padding-bottom: var(--space-sm); border-bottom: 2px solid var(--color-gray-200);">
+                                    <h3 class="form-section-title" style="margin: 0; border: none; padding: 0;">
+                                        <i class="fas fa-search"></i> SEO Settings
+                                    </h3>
+                                    <button type="button" id="generateAllSeo" class="btn btn-outline" style="flex-shrink: 0;">
+                                        <i class="fas fa-magic"></i> Auto-Generate All
+                                    </button>
+                                </div>
                                 
                                 <div class="form-group">
-                                    <label for="seo_title" class="form-label">SEO Title</label>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; gap: var(--space-md);">
+                                        <label for="seo_title" class="form-label" style="margin: 0;">SEO Title</label>
+                                        <button type="button" id="generateSeoTitle" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.75rem; flex-shrink: 0;">
+                                            <i class="fas fa-bolt"></i> Generate
+                                        </button>
+                                    </div>
                                     <input type="text" 
                                            id="seo_title" 
                                            name="seo_title" 
@@ -1216,7 +1226,12 @@ if ($post_id > 0) {
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="seo_description" class="form-label">SEO Description</label>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; gap: var(--space-md);">
+                                        <label for="seo_description" class="form-label" style="margin: 0;">SEO Description</label>
+                                        <button type="button" id="generateSeoDesc" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.75rem; flex-shrink: 0;">
+                                            <i class="fas fa-bolt"></i> Generate
+                                        </button>
+                                    </div>
                                     <textarea id="seo_description" 
                                               name="seo_description" 
                                               class="form-control" 
@@ -1316,26 +1331,79 @@ if ($post_id > 0) {
                 }
             });
             
+            // Generate SEO Title
+            document.getElementById('generateSeoTitle')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                const title = document.getElementById('title').value;
+                if (title) {
+                    const seoTitle = (title + ' | Mira Edge Technologies').substring(0, 60);
+                    document.getElementById('seo_title').value = seoTitle;
+                    updateCharCounter('seo_title', 'seoTitleCounter', 60);
+                }
+            });
+            
+            // Generate SEO Description
+            document.getElementById('generateSeoDesc')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                const excerpt = document.getElementById('excerpt').value;
+                if (excerpt) {
+                    const seoDesc = excerpt.substring(0, 160);
+                    document.getElementById('seo_description').value = seoDesc;
+                    updateCharCounter('seo_description', 'seoDescCounter', 160);
+                }
+            });
+            
+            // Generate All SEO Fields
+            document.getElementById('generateAllSeo')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('generateSeoTitle').click();
+                document.getElementById('generateSeoDesc').click();
+            });
+            
+            // Update character counter
+            function updateCharCounter(inputId, counterId, maxLength) {
+                const input = document.getElementById(inputId);
+                const counter = document.getElementById(counterId);
+                if (input && counter) {
+                    const length = input.value.length;
+                    counter.textContent = `${length}/${maxLength}`;
+                }
+            }
+            
             // Auto-generate SEO fields
             const titleInput = document.getElementById('title');
             const excerptInput = document.getElementById('excerpt');
             const seoTitleInput = document.getElementById('seo_title');
             const seoDescInput = document.getElementById('seo_description');
             
+            // Track if user manually edited these fields
+            let seoTitleManuallyEdited = seoTitleInput?.value?.length > 0;
+            let seoDescManuallyEdited = seoDescInput?.value?.length > 0;
+            
+            seoTitleInput?.addEventListener('change', function() {
+                seoTitleManuallyEdited = true;
+            });
+            
+            seoDescInput?.addEventListener('change', function() {
+                seoDescManuallyEdited = true;
+            });
+            
             function updateSeoFields() {
-                // Update SEO Title
-                if (!seoTitleInput.value && titleInput.value) {
-                    seoTitleInput.value = titleInput.value + ' | Mira Edge Technologies';
+                // Auto-generate SEO Title if not manually edited
+                if (!seoTitleManuallyEdited && titleInput?.value) {
+                    seoTitleInput.value = (titleInput.value + ' | Mira Edge Technologies').substring(0, 60);
+                    updateCharCounter('seo_title', 'seoTitleCounter', 60);
                 }
                 
-                // Update SEO Description
-                if (!seoDescInput.value && excerptInput.value) {
+                // Auto-generate SEO Description if not manually edited
+                if (!seoDescManuallyEdited && excerptInput?.value) {
                     seoDescInput.value = excerptInput.value.substring(0, 160);
+                    updateCharCounter('seo_description', 'seoDescCounter', 160);
                 }
             }
             
-            titleInput.addEventListener('input', updateSeoFields);
-            excerptInput.addEventListener('input', updateSeoFields);
+            titleInput?.addEventListener('input', updateSeoFields);
+            excerptInput?.addEventListener('input', updateSeoFields);
             
             // Remove current image
             const removeCurrentBtn = document.getElementById('removeCurrentImage');
