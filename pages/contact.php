@@ -7,6 +7,77 @@
 try {
     $db = Database::getInstance()->getConnection();
     
+    // Handle form submission
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
+        // Sanitize input
+        $name = trim($_POST['name'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $phone = trim($_POST['phone'] ?? '');
+        $subject = trim($_POST['subject'] ?? '');
+        $message = trim($_POST['message'] ?? '');
+        
+        // Validation
+        $errors = [];
+        
+        if (empty($name)) {
+            $errors[] = 'Name is required';
+        }
+        
+        if (empty($email)) {
+            $errors[] = 'Email is required';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'Invalid email format';
+        }
+        
+        if (empty($subject)) {
+            $errors[] = 'Subject is required';
+        }
+        
+        if (empty($message)) {
+            $errors[] = 'Message is required';
+        } elseif (strlen($message) < 10) {
+            $errors[] = 'Message must be at least 10 characters';
+        }
+        
+        // If no errors, insert into database
+        if (empty($errors)) {
+            try {
+                $stmt = $db->prepare("INSERT INTO contact_messages (name, email, subject, message, phone, received_at, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, NOW(), ?, ?)");
+                $stmt->execute([
+                    $name, 
+                    $email, 
+                    $subject, 
+                    $message, 
+                    $phone ?: null,
+                    $_SERVER['REMOTE_ADDR'] ?? null,
+                    $_SERVER['HTTP_USER_AGENT'] ?? null
+                ]);
+                
+                // Redirect to avoid resubmission and show success modal
+                header('Location: ' . url('/?page=contact') . '&success=1');
+                exit();
+                
+            } catch (PDOException $e) {
+                error_log('Contact form insert error: ' . $e->getMessage());
+                $errors[] = 'Database error occurred. Please try again later.';
+            }
+        }
+        
+        // If there are errors, store them in session and redirect back
+        if (!empty($errors)) {
+            $_SESSION['contact_errors'] = $errors;
+            $_SESSION['contact_form_data'] = [
+                'name' => $name,
+                'email' => $email,
+                'phone' => $phone,
+                'subject' => $subject,
+                'message' => $message
+            ];
+            header('Location: ' . url('/?page=contact') . '&error=1#contact-form');
+            exit();
+        }
+    }
+    
     // Get contact settings
     $company_email = getSetting('company_email', 'contact@miraedgetech.com');
     $company_phone = getSetting('company_phone', '+237 672 214 035');
@@ -54,6 +125,12 @@ $og_title = isset($seo_meta['og_title']) && $seo_meta['og_title'] ? $seo_meta['o
 $og_description = isset($seo_meta['og_description']) && $seo_meta['og_description'] ? $seo_meta['og_description'] : 'Reach out to us for your technology needs. We respond within 24 hours.';
 $og_image = isset($seo_meta['og_image']) && $seo_meta['og_image'] ? url($seo_meta['og_image']) : url('/assets/images/contact-hero.jpg');
 $canonical_url = isset($seo_meta['canonical_url']) && $seo_meta['canonical_url'] ? $seo_meta['canonical_url'] : url('/?page=contact');
+
+// Get form errors and old data from session
+$form_errors = $_SESSION['contact_errors'] ?? [];
+$old_data = $_SESSION['contact_form_data'] ?? [];
+// Clear session data after retrieving
+unset($_SESSION['contact_errors'], $_SESSION['contact_form_data']);
 
 // Fallback FAQ items
 if (empty($faq_items)) {
@@ -140,6 +217,7 @@ if (empty($faq_items)) {
             "addressCountry": "CM"
         }
     }
+}
 </script>
 
 <!-- Contact Hero Section -->
@@ -167,7 +245,7 @@ if (empty($faq_items)) {
                 </div>
                 <h3>Visit Us</h3>
                 <p><?php echo e($company_address); ?></p>
-                <a href="#map" onclick="document.querySelector('.map-container').scrollIntoView({behavior: 'smooth'})">
+                <a href="#map" onclick="document.querySelector('.map-container').scrollIntoView({behavior: 'smooth'}); return false;">
                     <i class="fas fa-arrow-right"></i> Get Directions
                 </a>
             </div>
@@ -208,7 +286,7 @@ if (empty($faq_items)) {
 </section>
 
 <!-- Contact Form & Map Section -->
-<section class="contact-form-section">
+<section class="contact-form-section" id="contact-form">
     <div class="container">
         <div class="contact-container">
             <!-- Contact Form -->
@@ -216,38 +294,54 @@ if (empty($faq_items)) {
                 <h2>Send Us a Message</h2>
                 <p>Fill out the form below and we'll get back to you as soon as possible.</p>
                 
-                <form id="contactForm" class="contact-form" onsubmit="submitContactForm(event)">
+                <!-- Display validation errors (only shown, not modal) -->
+                <?php if (!empty($form_errors) && isset($_GET['error'])): ?>
+                <div class="alert alert-error" style="margin-bottom: 20px; padding: 15px; background-color: #f8d7da; color: #721c24; border-radius: 5px;">
+                    <ul style="margin: 0; padding-left: 20px;">
+                        <?php foreach ($form_errors as $error): ?>
+                        <li><?php echo e($error); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+                <?php endif; ?>
+                
+                <form id="contactForm" class="contact-form" method="post" action="<?php echo url('/?page=contact'); ?>#contact-form">
+                    <input type="hidden" name="submit_contact" value="1">
+                    
                     <div class="form-group">
                         <label for="name"><i class="fas fa-user"></i> Full Name *</label>
-                        <input type="text" id="name" name="name" class="form-control" required>
+                        <input type="text" id="name" name="name" class="form-control <?php echo isset($form_errors) && !empty($form_errors) && empty($old_data['name']) ? 'error' : ''; ?>" 
+                               value="<?php echo e($old_data['name'] ?? ''); ?>" required>
                     </div>
                     
                     <div class="form-group">
                         <label for="email"><i class="fas fa-envelope"></i> Email Address *</label>
-                        <input type="email" id="email" name="email" class="form-control" required>
+                        <input type="email" id="email" name="email" class="form-control <?php echo isset($form_errors) && !empty($form_errors) && empty($old_data['email']) ? 'error' : ''; ?>" 
+                               value="<?php echo e($old_data['email'] ?? ''); ?>" required>
                     </div>
                     
                     <div class="form-group">
                         <label for="phone"><i class="fas fa-phone"></i> Phone Number</label>
-                        <input type="tel" id="phone" name="phone" class="form-control">
+                        <input type="tel" id="phone" name="phone" class="form-control" 
+                               value="<?php echo e($old_data['phone'] ?? ''); ?>">
                     </div>
                     
                     <div class="form-group">
                         <label for="subject"><i class="fas fa-tag"></i> Subject *</label>
-                        <select id="subject" name="subject" class="form-control" required>
-                            <option value="" disabled selected>Select a subject</option>
-                            <option value="general">General Inquiry</option>
-                            <option value="project">Project Inquiry</option>
-                            <option value="support">Technical Support</option>
-                            <option value="careers">Careers</option>
-                            <option value="partnership">Partnership</option>
-                            <option value="other">Other</option>
+                        <select id="subject" name="subject" class="form-control <?php echo isset($form_errors) && !empty($form_errors) && empty($old_data['subject']) ? 'error' : ''; ?>" required>
+                            <option value="" disabled <?php echo empty($old_data['subject']) ? 'selected' : ''; ?>>Select a subject</option>
+                            <option value="general" <?php echo ($old_data['subject'] ?? '') == 'general' ? 'selected' : ''; ?>>General Inquiry</option>
+                            <option value="project" <?php echo ($old_data['subject'] ?? '') == 'project' ? 'selected' : ''; ?>>Project Inquiry</option>
+                            <option value="support" <?php echo ($old_data['subject'] ?? '') == 'support' ? 'selected' : ''; ?>>Technical Support</option>
+                            <option value="careers" <?php echo ($old_data['subject'] ?? '') == 'careers' ? 'selected' : ''; ?>>Careers</option>
+                            <option value="partnership" <?php echo ($old_data['subject'] ?? '') == 'partnership' ? 'selected' : ''; ?>>Partnership</option>
+                            <option value="other" <?php echo ($old_data['subject'] ?? '') == 'other' ? 'selected' : ''; ?>>Other</option>
                         </select>
                     </div>
                     
                     <div class="form-group full-width">
                         <label for="message"><i class="fas fa-comment"></i> Your Message *</label>
-                        <textarea id="message" name="message" class="form-control" rows="6" required></textarea>
+                        <textarea id="message" name="message" class="form-control <?php echo isset($form_errors) && !empty($form_errors) && empty($old_data['message']) ? 'error' : ''; ?>" rows="6" required><?php echo e($old_data['message'] ?? ''); ?></textarea>
                     </div>
                     
                     <div class="form-group full-width">
@@ -260,11 +354,7 @@ if (empty($faq_items)) {
             
             <!-- Map Container -->
             <div class="map-container animate-right" id="map">
-                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.158527377184!2d11.514381!3d3.866512!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x108bebf1b2b3b3b3%3A0x3b3b3b3b3b3b3b3b!2sYaounde%2C%20Cameroon!5e0!3m2!1sen!2sus!4v1620000000000!5m2!1sen!2sus" 
-                        allowfullscreen="" 
-                        loading="lazy"
-                        title="Mira Edge Technologies Location">
-                </iframe>
+<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3980.823937013284!2d11.479921673963268!3d3.8479408484618918!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x108bcf6da309b55b%3A0x746fe6e440113ece!2sMira%20Edge%20Technologies!5e0!3m2!1sen!2sus!4v1771852818582!5m2!1sen!2sus" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                 
                 <div class="map-overlay">
                     <div class="map-overlay-icon">
@@ -404,8 +494,9 @@ if (empty($faq_items)) {
             <h2>Subscribe to Our Newsletter</h2>
             <p>Get the latest tech insights, company updates, and special offers delivered to your inbox.</p>
             
-            <form class="newsletter-form-large" onsubmit="submitNewsletter(event)">
-                <input type="email" placeholder="Your email address" required>
+            <form class="newsletter-form-large" method="post" action="<?php echo url('/?page=contact'); ?>">
+                <input type="email" name="newsletter_email" placeholder="Your email address" required>
+                <input type="hidden" name="submit_newsletter" value="1">
                 <button type="submit">
                     <i class="fas fa-paper-plane"></i> Subscribe
                 </button>
@@ -436,86 +527,6 @@ function toggleFaq(element) {
     faqItem.classList.toggle('active');
 }
 
-// Form Submission
-async function submitContactForm(event) {
-    event.preventDefault();
-    
-    const submitBtn = document.getElementById('contactSubmitBtn');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<span class="spinner"></span> Sending...';
-    submitBtn.disabled = true;
-    
-    const formData = new FormData(event.target);
-    const data = {
-        name: formData.get('name'),
-        email: formData.get('email'),
-        phone: formData.get('phone'),
-        subject: formData.get('subject'),
-        message: formData.get('message')
-    };
-    
-    try {
-        const response = await fetch('<?php echo url('/api/contact.php'); ?>', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        });
-
-        const text = await response.text();
-        let result;
-        try {
-            result = JSON.parse(text);
-        } catch (parseError) {
-            console.error('Non-JSON response from contact API:', text);
-            throw new Error('Server returned invalid response. See console for details.');
-        }
-
-        if (result.success) {
-            // Show success modal
-            openSuccessModal();
-            event.target.reset();
-        } else {
-            throw new Error(result.message || 'Failed to send message');
-        }
-        
-    } catch (error) {
-        console.error('Error:', error);
-        showNotification('error', error.message || 'Failed to send message. Please try again or contact us directly.');
-    } finally {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-    }
-}
-
-// Newsletter Submission
-async function submitNewsletter(event) {
-    event.preventDefault();
-    
-    const form = event.target;
-    const email = form.querySelector('input[type="email"]').value;
-    const button = form.querySelector('button');
-    const originalText = button.innerHTML;
-    
-    button.innerHTML = '<span class="spinner"></span>';
-    button.disabled = true;
-    
-    try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        showNotification('success', 'Successfully subscribed to our newsletter!');
-        form.reset();
-        
-    } catch (error) {
-        showNotification('error', 'Subscription failed. Please try again.');
-    } finally {
-        button.innerHTML = originalText;
-        button.disabled = false;
-    }
-}
-
 // Success Modal Functions
 function openSuccessModal() {
     document.getElementById('successModal').style.display = 'flex';
@@ -527,40 +538,32 @@ function closeSuccessModal() {
     document.body.style.overflow = 'auto';
 }
 
-// Notification Function
-function showNotification(type, message) {
-    const notification = document.createElement('div');
-    notification.className = `alert alert-${type}`;
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-        <span>${message}</span>
-        <button class="alert-close">&times;</button>
-    `;
-    
-    const container = document.querySelector('.flash-messages');
-    if (!container) {
-        const newContainer = document.createElement('div');
-        newContainer.className = 'flash-messages';
-        document.body.appendChild(newContainer);
-        newContainer.appendChild(notification);
-    } else {
-        container.appendChild(notification);
+// Form submission loading state
+document.addEventListener('DOMContentLoaded', function() {
+    const contactForm = document.getElementById('contactForm');
+    if (contactForm) {
+        contactForm.addEventListener('submit', function() {
+            const submitBtn = document.getElementById('contactSubmitBtn');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            submitBtn.disabled = true;
+        });
     }
     
-    setTimeout(() => {
-        notification.style.animation = 'slideOutRight 0.3s ease forwards';
-        setTimeout(() => {
-            notification.remove();
-        }, 300);
-    }, 5000);
+    // Newsletter form submission
+    const newsletterForm = document.querySelector('.newsletter-form-large');
+    if (newsletterForm) {
+        newsletterForm.addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            submitBtn.disabled = true;
+        });
+    }
     
-    notification.querySelector('.alert-close').addEventListener('click', function() {
-        notification.style.animation = 'slideOutRight 0.3s ease forwards';
-        setTimeout(() => {
-            notification.remove();
-        }, 300);
-    });
-}
+    // Show success modal if success parameter is present
+    <?php if (isset($_GET['success']) && $_GET['success'] == '1'): ?>
+        openSuccessModal();
+    <?php endif; ?>
+});
 
 // Close modal when clicking outside
 window.onclick = function(event) {
@@ -578,7 +581,7 @@ document.addEventListener('keydown', function(event) {
 });
 
 // Smooth scroll for directions link
-document.querySelector('a[href="#map"]').addEventListener('click', function(e) {
+document.querySelector('a[href="#map"]')?.addEventListener('click', function(e) {
     e.preventDefault();
     document.querySelector('.map-container').scrollIntoView({
         behavior: 'smooth',
@@ -597,6 +600,15 @@ document.querySelectorAll('.form-control').forEach(input => {
         this.classList.remove('error');
     });
 });
+
+// Auto-hide error alerts after 5 seconds
+setTimeout(function() {
+    document.querySelectorAll('.alert-error').forEach(alert => {
+        alert.style.transition = 'opacity 0.5s ease';
+        alert.style.opacity = '0';
+        setTimeout(() => alert.remove(), 500);
+    });
+}, 5000);
 </script>
 
 <!-- Link to contact.css -->

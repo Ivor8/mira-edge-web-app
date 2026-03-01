@@ -41,13 +41,24 @@ try {
         $allowed = [
             'application/pdf',
             'application/msword',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'image/jpeg',
+            'image/png',
+            'image/gif',
+            'image/webp'
         ];
 
         $uploadResult = uploadFile($_FILES['resume'], __DIR__ . '/../uploads/resumes', $allowed);
 
         if (!$uploadResult['success']) {
-            echo json_encode(['success' => false, 'message' => $uploadResult['error']]);
+            // Provide more specific error message for file type
+            if (strpos($uploadResult['error'], 'Invalid file type') !== false) {
+                $fileName = $_FILES['resume']['name'];
+                $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+                echo json_encode(['success' => false, 'message' => "File type '{$fileExt}' is not allowed. Please upload PDF, DOC, DOCX, or image files (JPG, PNG, GIF, WEBP)."]);
+            } else {
+                echo json_encode(['success' => false, 'message' => $uploadResult['error']]);
+            }
             exit;
         }
 

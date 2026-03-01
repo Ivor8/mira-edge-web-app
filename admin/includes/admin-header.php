@@ -82,7 +82,7 @@
                 <i class="fas fa-chevron-down"></i>
             </button>
             <div class="user-profile-menu">
-                <a href="../admin/profile.php" class="profile-menu-item">
+                <a href="<?php echo url('/admin/profile.php'); ?>" class="profile-menu-item">
                     <i class="fas fa-user"></i>
                     <span>My Profile</span>
                 </a>

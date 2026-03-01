@@ -94,15 +94,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Generate unique filename
             $ext = pathinfo($_FILES['featured_image']['name'], PATHINFO_EXTENSION);
             $filename = uniqid() . '_' . time() . '.' . $ext;
-            $upload_path = url('/assets/uploads/projects/' . $filename);
-            $upload_dir = $_SERVER['DOCUMENT_ROOT'] . parse_url(url('/assets/uploads/projects/'), PHP_URL_PATH);
+            $upload_dir = $_SERVER['DOCUMENT_ROOT'] . '/assets/uploads/projects/';
             
             // Create directory if it doesn't exist
             if (!is_dir($upload_dir)) {
                 mkdir($upload_dir, 0755, true);
             }
             
-            if (move_uploaded_file($_FILES['featured_image']['tmp_name'], $upload_dir . '/' . $filename)) {
+            if (move_uploaded_file($_FILES['featured_image']['tmp_name'], $upload_dir . $filename)) {
                 $featured_image = '/assets/uploads/projects/' . $filename;
             } else {
                 $errors['featured_image'] = 'Failed to upload image';
@@ -139,6 +138,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Handle multiple images upload
             if (isset($_FILES['project_images']) && !empty($_FILES['project_images']['name'][0])) {
                 $images = $_FILES['project_images'];
+                $upload_dir = $_SERVER['DOCUMENT_ROOT'] . '/assets/uploads/projects/gallery/';
+                
+                if (!is_dir($upload_dir)) {
+                    mkdir($upload_dir, 0755, true);
+                }
                 
                 for ($i = 0; $i < count($images['name']); $i++) {
                     if ($images['error'][$i] === UPLOAD_ERR_OK) {
@@ -148,14 +152,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if (in_array($file_type, $allowed_types)) {
                             $ext = pathinfo($images['name'][$i], PATHINFO_EXTENSION);
                             $filename = uniqid() . '_' . time() . '_' . $i . '.' . $ext;
-                            $upload_path = url('/assets/uploads/projects/gallery/' . $filename);
-                            $upload_dir = $_SERVER['DOCUMENT_ROOT'] . parse_url(url('/assets/uploads/projects/gallery/'), PHP_URL_PATH);
                             
-                            if (!is_dir($upload_dir)) {
-                                mkdir($upload_dir, 0755, true);
-                            }
-                            
-                            if (move_uploaded_file($images['tmp_name'][$i], $upload_dir . '/' . $filename)) {
+                            if (move_uploaded_file($images['tmp_name'][$i], $upload_dir . $filename)) {
                                 $stmt = $db->prepare("
                                     INSERT INTO project_images (project_id, image_url, alt_text, display_order)
                                     VALUES (?, ?, ?, ?)
@@ -175,27 +173,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Handle technologies
             if (isset($_POST['technologies']) && is_array($_POST['technologies'])) {
                 foreach ($_POST['technologies'] as $technology) {
-                    if (is_array($technology)) {
-                        // Handle if it's nested arrays
-                        foreach ($technology as $tech) {
-                            $tech_name = trim($tech);
-                            if (!empty($tech_name)) {
-                                $stmt = $db->prepare("
-                                    INSERT INTO project_technologies (project_id, technology_name)
-                                    VALUES (?, ?)
-                                ");
-                                $stmt->execute([$project_id, $tech_name]);
-                            }
-                        }
-                    } else {
-                        $tech_name = trim($technology);
-                        if (!empty($tech_name)) {
-                            $stmt = $db->prepare("
-                                INSERT INTO project_technologies (project_id, technology_name)
-                                VALUES (?, ?)
-                            ");
-                            $stmt->execute([$project_id, $tech_name]);
-                        }
+                    $tech_name = trim($technology);
+                    if (!empty($tech_name)) {
+                        $stmt = $db->prepare("
+                            INSERT INTO project_technologies (project_id, technology_name)
+                            VALUES (?, ?)
+                        ");
+                        $stmt->execute([$project_id, $tech_name]);
                     }
                 }
             }
@@ -292,6 +276,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         .technology-tag button:hover {
             color: var(--color-error);
+        }
+        
+        .seo-actions {
+            display: flex;
+            gap: var(--space-xs);
+            margin-top: var(--space-xs);
+        }
+        
+        .seo-actions button {
+            font-size: 0.875rem;
+            padding: 4px 12px;
         }
     </style>
 </head>
@@ -652,9 +647,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             </button>
                                         </div>
                                         <div class="technologies-container" id="technologiesContainer">
-                                            <!-- Technologies will be added here -->
+                                            <!-- Technologies will be added here dynamically -->
                                         </div>
-                                        <input type="hidden" name="technologies[]" id="technologiesInput">
+                                        <small class="form-text">Technologies will appear as tags. Click the X to remove.</small>
                                     </div>
                                 </div>
                                 
@@ -675,6 +670,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                class="form-control" 
                                                value="<?php echo e($_POST['seo_title'] ?? ''); ?>"
                                                placeholder="Auto-generated from title">
+                                        <div class="seo-actions">
+                                            <button type="button" id="generateSeoTitle" class="btn btn-sm btn-outline">
+                                                <i class="fas fa-sync-alt"></i> Generate from Title
+                                            </button>
+                                        </div>
                                         <small class="form-text">Leave empty to auto-generate from title</small>
                                     </div>
                                     
@@ -687,6 +687,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                   class="form-control" 
                                                   rows="2"
                                                   placeholder="Auto-generated from short description"><?php echo e($_POST['seo_description'] ?? ''); ?></textarea>
+                                        <div class="seo-actions">
+                                            <button type="button" id="generateSeoDesc" class="btn btn-sm btn-outline">
+                                                <i class="fas fa-sync-alt"></i> Generate from Short Description
+                                            </button>
+                                        </div>
                                         <small class="form-text">Leave empty to auto-generate from short description</small>
                                     </div>
                                     
@@ -700,6 +705,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                class="form-control" 
                                                value="<?php echo e($_POST['seo_keywords'] ?? ''); ?>"
                                                placeholder="comma, separated, keywords">
+                                        <div class="seo-actions">
+                                            <button type="button" id="generateSeoKeywords" class="btn btn-sm btn-outline">
+                                                <i class="fas fa-sync-alt"></i> Generate from Technologies
+                                            </button>
+                                        </div>
                                         <small class="form-text">Separate keywords with commas</small>
                                     </div>
                                 </div>
@@ -725,11 +735,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="<?php echo url('assets/js/admin.js'); ?>"></script>
     <script src="<?php echo url('assets/js/projects.js'); ?>"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
     <script>
-        // Add Project specific JavaScript
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize Select2
             $('#category_id').select2({
@@ -738,96 +749,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 width: '100%'
             });
             
-            // Generate slug from title
-            document.getElementById('generateSlug').addEventListener('click', function() {
-                const title = document.getElementById('title').value;
-                if (title) {
-                    const slug = title.toLowerCase()
-                        .replace(/[^a-z0-9\s-]/g, '')
-                        .replace(/\s+/g, '-')
-                        .replace(/-+/g, '-')
-                        .trim();
-                    document.getElementById('slug').value = slug;
-                }
-            });
-            
-            // Auto-generate SEO fields
-            document.getElementById('title').addEventListener('input', function() {
-                const title = this.value;
-                const seoTitle = document.getElementById('seo_title');
-                const seoDescription = document.getElementById('seo_description');
-                
-                if (!seoTitle.value && title) {
-                    seoTitle.value = title + ' | Mira Edge Technologies';
-                }
-                
-                if (!seoDescription.value && document.getElementById('short_description').value) {
-                    seoDescription.value = document.getElementById('short_description').value.substring(0, 160);
-                }
-            });
-            
-            // Featured image preview
-            document.getElementById('featured_image').addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const preview = document.getElementById('featuredImagePreview');
-                        preview.querySelector('img').src = e.target.result;
-                        preview.style.display = 'block';
-                    }
-                    reader.readAsDataURL(file);
-                }
-            });
-            
-            // Technologies management
+            // ===== TECHNOLOGY MANAGEMENT =====
             const technologyInput = document.getElementById('technology_input');
+            const addTechnologyBtn = document.getElementById('addTechnology');
             const technologiesContainer = document.getElementById('technologiesContainer');
-            const technologiesInput = document.getElementById('technologiesInput');
-            const technologies = [];
+            const addProjectForm = document.getElementById('addProjectForm');
             
-            document.getElementById('addTechnology').addEventListener('click', function() {
-                const tech = technologyInput.value.trim();
-                if (tech && !technologies.includes(tech)) {
-                    technologies.push(tech);
-                    updateTechnologiesUI();
-                    technologyInput.value = '';
-                    technologyInput.focus();
-                }
-            });
+            // Store technologies in an array
+            let technologies = [];
             
-            technologyInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    document.getElementById('addTechnology').click();
-                }
-            });
-            
+            // Function to update the UI with technology tags
             function updateTechnologiesUI() {
                 technologiesContainer.innerHTML = '';
-                
-                // Clear old hidden inputs
-                const form = document.getElementById('addProjectForm');
-                const oldInputs = form.querySelectorAll('input[name="technologies[]"]');
-                oldInputs.forEach(input => input.remove());
                 
                 technologies.forEach((tech, index) => {
                     const tag = document.createElement('div');
                     tag.className = 'technology-tag';
                     tag.innerHTML = `
-                        ${escapeHtml(tech)}
+                        <span>${escapeHtml(tech)}</span>
                         <button type="button" class="remove-technology" data-index="${index}">
                             <i class="fas fa-times"></i>
                         </button>
                     `;
                     technologiesContainer.appendChild(tag);
-                    
-                    // Create hidden input for each technology
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'technologies[]';
-                    input.value = tech;
-                    form.appendChild(input);
                 });
                 
                 // Add event listeners to remove buttons
@@ -841,9 +785,122 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 });
             }
             
-            // Text editor toolbar
+            // Function to add a technology
+            function addTechnology() {
+                const tech = technologyInput.value.trim();
+                if (tech && !technologies.includes(tech)) {
+                    technologies.push(tech);
+                    updateTechnologiesUI();
+                    technologyInput.value = '';
+                    technologyInput.focus();
+                } else if (technologies.includes(tech)) {
+                    alert('This technology has already been added');
+                }
+            }
+            
+            // Add technology on button click
+            if (addTechnologyBtn) {
+                addTechnologyBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    addTechnology();
+                });
+            }
+            
+            // Add technology on Enter key
+            if (technologyInput) {
+                technologyInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addTechnology();
+                    }
+                });
+            }
+            
+            // Before form submission, add hidden inputs for all technologies
+            addProjectForm.addEventListener('submit', function(e) {
+                // Remove any existing technology hidden inputs
+                const existingInputs = addProjectForm.querySelectorAll('input[name="technologies[]"]');
+                existingInputs.forEach(input => input.remove());
+                
+                // Add hidden inputs for each technology
+                technologies.forEach(tech => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'technologies[]';
+                    input.value = tech;
+                    addProjectForm.appendChild(input);
+                });
+            });
+            
+            // ===== SEO GENERATION FUNCTIONS =====
+            const titleField = document.getElementById('title');
+            const shortDescField = document.getElementById('short_description');
+            const seoTitleField = document.getElementById('seo_title');
+            const seoDescField = document.getElementById('seo_description');
+            const seoKeywordsField = document.getElementById('seo_keywords');
+            
+            // Generate SEO Title
+            document.getElementById('generateSeoTitle').addEventListener('click', function() {
+                if (titleField.value.trim()) {
+                    seoTitleField.value = titleField.value.trim() + ' | Mira Edge Technologies';
+                } else {
+                    alert('Please enter a project title first');
+                }
+            });
+            
+            // Generate SEO Description
+            document.getElementById('generateSeoDesc').addEventListener('click', function() {
+                if (shortDescField.value.trim()) {
+                    const desc = shortDescField.value.trim().substring(0, 160);
+                    seoDescField.value = desc;
+                } else {
+                    alert('Please enter a short description first');
+                }
+            });
+            
+            // Generate SEO Keywords
+            document.getElementById('generateSeoKeywords').addEventListener('click', function() {
+                if (technologies.length > 0) {
+                    const keywords = technologies.join(', ');
+                    seoKeywordsField.value = keywords + ', project, portfolio';
+                } else {
+                    alert('Please add some technologies first');
+                }
+            });
+            
+            // Auto-generate slug
+            document.getElementById('generateSlug').addEventListener('click', function() {
+                const title = titleField.value;
+                if (title) {
+                    const slug = title.toLowerCase()
+                        .replace(/[^a-z0-9\s-]/g, '')
+                        .replace(/\s+/g, '-')
+                        .replace(/-+/g, '-')
+                        .trim();
+                    document.getElementById('slug').value = slug;
+                } else {
+                    alert('Please enter a project title first');
+                }
+            });
+            
+            // ===== IMAGE PREVIEW =====
+            document.getElementById('featured_image').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const preview = document.getElementById('featuredImagePreview');
+                        preview.querySelector('img').src = e.target.result;
+                        preview.style.display = 'block';
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // ===== TEXT EDITOR =====
             document.querySelectorAll('.editor-toolbar button').forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
                     const command = this.dataset.command;
                     const textarea = document.getElementById('full_description');
                     
@@ -862,84 +919,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 });
             });
             
-            // Form validation
-            const form = document.getElementById('addProjectForm');
-            form.addEventListener('submit', function(e) {
+            // ===== FORM VALIDATION =====
+            addProjectForm.addEventListener('submit', function(e) {
                 let valid = true;
+                let firstError = null;
                 
                 // Check required fields
-                const requiredFields = form.querySelectorAll('[required]');
+                const requiredFields = addProjectForm.querySelectorAll('[required]');
                 requiredFields.forEach(field => {
+                    field.classList.remove('error');
+                    const existingError = field.parentNode.querySelector('.form-error');
+                    if (existingError) {
+                        existingError.remove();
+                    }
+                    
                     if (!field.value.trim()) {
                         valid = false;
                         field.classList.add('error');
                         
-                        // Add error message
-                        if (!field.nextElementSibling || !field.nextElementSibling.classList.contains('form-error')) {
-                            const error = document.createElement('div');
-                            error.className = 'form-error';
-                            error.textContent = 'This field is required';
-                            field.parentNode.insertBefore(error, field.nextSibling);
+                        if (!firstError) {
+                            firstError = field;
                         }
-                    } else {
-                        field.classList.remove('error');
-                        const error = field.nextElementSibling;
-                        if (error && error.classList.contains('form-error')) {
-                            error.remove();
-                        }
+                        
+                        const error = document.createElement('div');
+                        error.className = 'form-error';
+                        error.textContent = 'This field is required';
+                        field.parentNode.insertBefore(error, field.nextSibling);
                     }
                 });
                 
                 if (!valid) {
                     e.preventDefault();
-                    showNotification('Please fill in all required fields', 'error');
+                    alert('Please fill in all required fields');
+                    if (firstError) {
+                        firstError.focus();
+                    }
                 }
             });
             
-            // Character counters
-            const shortDesc = document.getElementById('short_description');
-            const seoDesc = document.getElementById('seo_description');
-            
-            function addCharacterCounter(textarea, maxLength) {
-                const counter = document.createElement('div');
-                counter.className = 'char-counter';
-                counter.style.fontSize = '0.75rem';
-                counter.style.color = 'var(--color-gray-500)';
-                counter.style.textAlign = 'right';
-                counter.style.marginTop = '4px';
-                
-                textarea.parentNode.insertBefore(counter, textarea.nextSibling);
-                
-                function updateCounter() {
-                    const length = textarea.value.length;
-                    counter.textContent = `${length} / ${maxLength}`;
-                    
-                    if (length > maxLength * 0.9) {
-                        counter.style.color = 'var(--color-warning)';
-                    } else if (length > maxLength) {
-                        counter.style.color = 'var(--color-error)';
-                    } else {
-                        counter.style.color = 'var(--color-gray-500)';
-                    }
-                }
-                
-                textarea.addEventListener('input', updateCounter);
-                updateCounter();
+            // Helper function for escaping HTML
+            function escapeHtml(text) {
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return text.replace(/[&<>"']/g, m => map[m]);
             }
-            
-            addCharacterCounter(shortDesc, 500);
-            addCharacterCounter(seoDesc, 160);
         });
-        
-        function escapeHtml(text) {
-            const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
-            return text.replace(/[&<>"']/g, m => map[m]);
-        }
+    </script>
 </body>
 </html>

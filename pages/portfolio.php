@@ -5,35 +5,81 @@
  */
 
 // Get data from database
+$categories = [];
+$projects = [];
+$featured_project = null;
+$seo_meta = [];
+
 try {
     $db = Database::getInstance()->getConnection();
     
     // Get all portfolio categories
-    $stmt = $db->prepare("
-        SELECT * FROM portfolio_categories 
-        WHERE is_active = 1 
-        ORDER BY display_order ASC
-    ");
-    $stmt->execute();
-    $categories = $stmt->fetchAll() ?: [];
+    try {
+        $stmt = $db->prepare("
+            SELECT * FROM portfolio_categories 
+            WHERE is_active = 1 
+            ORDER BY display_order ASC
+        ");
+        $stmt->execute();
+        $categories = $stmt->fetchAll() ?: [];
+    } catch (PDOException $e) {
+        error_log("Portfolio Categories Error: " . $e->getMessage());
+    }
     
-    // Get all portfolio projects with their categories and technologies
-    $stmt = $db->prepare("
-        SELECT p.*, pc.category_name, pc.slug as category_slug,
-               GROUP_CONCAT(pt.technology_name) as technologies,
-               GROUP_CONCAT(pt.icon_class) as tech_icons
-        FROM portfolio_projects p
-        LEFT JOIN portfolio_categories pc ON p.category_id = pc.category_id
-        LEFT JOIN project_technologies pt ON p.project_id = pt.project_id
-        WHERE p.status != 'upcoming'
-        GROUP BY p.project_id
-        ORDER BY p.is_featured DESC, p.display_order ASC, p.created_at DESC
-    ");
-    $stmt->execute();
-    $projects = $stmt->fetchAll() ?: [];
+    // Get all portfolio projects with their categories
+    // Simplified query - removed GROUP_CONCAT to avoid compatibility issues
+    try {
+        $stmt = $db->prepare("
+            SELECT p.*, pc.category_name, pc.slug as category_slug
+            FROM portfolio_projects p
+            LEFT JOIN portfolio_categories pc ON p.category_id = pc.category_id
+            WHERE p.status != 'upcoming'
+            ORDER BY p.is_featured DESC, p.display_order ASC, p.created_at DESC
+        ");
+        $stmt->execute();
+        $projects = $stmt->fetchAll() ?: [];
+        error_log("Portfolio Page: fetched " . count($projects) . " projects from database.");
+    } catch (PDOException $e) {
+        error_log("Portfolio Projects Query Error: " . $e->getMessage());
+    }
+    
+    // Get technologies for each project (using index-based loop to avoid reference issues)
+    foreach ($projects as $idx => $project) {
+        try {
+            $stmt = $db->prepare("
+                SELECT technology_name, icon_class 
+                FROM project_technologies 
+                WHERE project_id = ?
+                ORDER BY display_order ASC
+            ");
+            $stmt->execute([$project['project_id']]);
+            $techs = $stmt->fetchAll() ?: [];
+            $projects[$idx]['technologies'] = implode(',', array_map(function($t) { return $t['technology_name']; }, $techs));
+            $projects[$idx]['tech_icons'] = implode(',', array_map(function($t) { return $t['icon_class']; }, $techs));
+        } catch (PDOException $e) {
+            error_log("Portfolio Technologies Error for project {$project['project_id']}: " . $e->getMessage());
+            $projects[$idx]['technologies'] = '';
+            $projects[$idx]['tech_icons'] = '';
+        }
+    }
+    
+    // Get project images for each project (index-based loop to prevent reference carryover)
+    foreach ($projects as $idx => $project) {
+        try {
+            $stmt = $db->prepare("
+                SELECT * FROM project_images 
+                WHERE project_id = ? 
+                ORDER BY display_order ASC
+            ");
+            $stmt->execute([$project['project_id']]);
+            $projects[$idx]['images'] = $stmt->fetchAll() ?: [];
+        } catch (PDOException $e) {
+            error_log("Portfolio Images Error for project {$project['project_id']}: " . $e->getMessage());
+            $projects[$idx]['images'] = [];
+        }
+    }
     
     // Get featured project (first featured project)
-    $featured_project = null;
     foreach ($projects as $project) {
         if ($project['is_featured'] == 1) {
             $featured_project = $project;
@@ -41,32 +87,21 @@ try {
         }
     }
     
-    // Get project images for each project
-    foreach ($projects as &$project) {
+    // Get SEO metadata for portfolio page
+    try {
         $stmt = $db->prepare("
-            SELECT * FROM project_images 
-            WHERE project_id = ? 
-            ORDER BY display_order ASC
+            SELECT * FROM seo_metadata 
+            WHERE page_type = 'portfolio' OR (page_type = 'custom' AND page_slug = 'portfolio')
+            LIMIT 1
         ");
-        $stmt->execute([$project['project_id']]);
-        $project['images'] = $stmt->fetchAll() ?: [];
+        $stmt->execute();
+        $seo_meta = $stmt->fetch() ?: [];
+    } catch (PDOException $e) {
+        error_log("Portfolio SEO Metadata Error: " . $e->getMessage());
     }
     
-    // Get SEO metadata for portfolio page
-    $stmt = $db->prepare("
-        SELECT * FROM seo_metadata 
-        WHERE page_type = 'portfolio' OR (page_type = 'custom' AND page_slug = 'portfolio')
-        LIMIT 1
-    ");
-    $stmt->execute();
-    $seo_meta = $stmt->fetch() ?: [];
-    
-} catch (PDOException $e) {
-    error_log("Portfolio Page Error: " . $e->getMessage());
-    $categories = [];
-    $projects = [];
-    $featured_project = null;
-    $seo_meta = [];
+} catch (Exception $e) {
+    error_log("Portfolio Page General Error: " . $e->getMessage());
 }
 
 // Set page-specific SEO metadata
@@ -159,20 +194,20 @@ if (empty($projects)) {
 }
 
 // Process technologies for each project
-foreach ($projects as &$project) {
+foreach ($projects as $idx => $project) {
     if (!empty($project['technologies'])) {
         $tech_names = explode(',', $project['technologies']);
         $tech_icons = !empty($project['tech_icons']) ? explode(',', $project['tech_icons']) : [];
-        $project['tech_list'] = [];
+        $projects[$idx]['tech_list'] = [];
         
         foreach ($tech_names as $index => $name) {
-            $project['tech_list'][] = [
+            $projects[$idx]['tech_list'][] = [
                 'name' => trim($name),
                 'icon' => isset($tech_icons[$index]) ? trim($tech_icons[$index]) : ''
             ];
         }
     } else {
-        $project['tech_list'] = [];
+        $projects[$idx]['tech_list'] = [];
     }
 }
 ?>

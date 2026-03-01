@@ -840,12 +840,12 @@ if (empty($jobs)) {
                     </div>
                     
                     <div class="form-group full-width">
-                        <label for="quick_resume"><i class="fas fa-file-pdf"></i> Upload Resume *</label>
+                        <label for="quick_resume"><i class="fas fa-file-pdf"></i> Upload Resume/CV *</label>
                         <div class="file-upload" onclick="document.getElementById('quick_resume').click()">
                             <i class="fas fa-cloud-upload-alt"></i>
                             <p>Click to upload or drag and drop</p>
-                            <small>PDF, DOC, DOCX (Max 5MB)</small>
-                            <input type="file" id="quick_resume" name="resume" accept=".pdf,.doc,.docx" style="display: none;" required onchange="updateFileName(this, 'resume-file-name')">
+                            <small>PDF, DOC, DOCX, JPG, PNG, GIF, WEBP (Max 5MB)</small>
+                            <input type="file" id="quick_resume" name="resume" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp" style="display: none;" required onchange="updateFileName(this, 'resume-file-name')">
                             <div id="resume-file-name" class="file-name"></div>
                         </div>
                     </div>
@@ -862,6 +862,20 @@ if (empty($jobs)) {
                     </div>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Success/Error Modal -->
+<div id="applicationModal" class="success-modal" style="display: none;">
+    <div class="success-modal-content">
+        <div class="success-modal-header" id="applicationModalHeader">
+            <i class="fas fa-check-circle" id="applicationModalIcon"></i>
+            <h2 id="applicationModalTitle">Application Submitted!</h2>
+        </div>
+        <div class="success-modal-body">
+            <p id="applicationModalMessage">Thank you for your application. We'll review it and get back to you soon.</p>
+            <button class="btn" onclick="closeApplicationModal()">Close</button>
         </div>
     </div>
 </div>
@@ -971,12 +985,12 @@ function openJobModal(job) {
                     </div>
                     
                     <div class="form-group">
-                        <label for="app_resume_${job.job_id}"><i class="fas fa-file-pdf"></i> Upload Resume *</label>
+                        <label for="app_resume_${job.job_id}"><i class="fas fa-file-pdf"></i> Upload Resume/CV *</label>
                         <div class="file-upload" onclick="document.getElementById('app_resume_${job.job_id}').click()">
                             <i class="fas fa-cloud-upload-alt"></i>
                             <p>Click to upload or drag and drop</p>
-                            <small>PDF, DOC, DOCX (Max 5MB)</small>
-                            <input type="file" id="app_resume_${job.job_id}" name="resume" accept=".pdf,.doc,.docx" style="display: none;" required onchange="updateFileName(this, 'app-resume-name-${job.job_id}')">
+                            <small>PDF, DOC, DOCX, JPG, PNG, GIF, WEBP (Max 5MB)</small>
+                            <input type="file" id="app_resume_${job.job_id}" name="resume" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp" style="display: none;" required onchange="updateFileName(this, 'app-resume-name-${job.job_id}')">
                             <div id="app-resume-name-${job.job_id}" class="file-name"></div>
                         </div>
                     </div>
@@ -1018,6 +1032,58 @@ function closeQuickApplyModal() {
     document.getElementById('resume-file-name').innerHTML = '';
 }
 
+// Application Modal Functions
+function openApplicationModal(type, title, message) {
+    const modal = document.getElementById('applicationModal');
+    const modalContent = modal.querySelector('.success-modal-content');
+    const modalHeader = document.getElementById('applicationModalHeader');
+    const modalIcon = document.getElementById('applicationModalIcon');
+    const modalTitle = document.getElementById('applicationModalTitle');
+    const modalMessage = document.getElementById('applicationModalMessage');
+    
+    // Update modal content based on type
+    if (type === 'success') {
+        modalHeader.className = 'success-modal-header success';
+        modalIcon.className = 'fas fa-check-circle';
+    } else {
+        modalHeader.className = 'success-modal-header error';
+        modalIcon.className = 'fas fa-exclamation-circle';
+    }
+    
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    
+    // Ensure modal is visible
+    modal.style.display = 'flex';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    modal.style.zIndex = '10000';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.padding = '20px';
+    
+    // Ensure modal content is visible
+    modalContent.style.backgroundColor = 'white';
+    modalContent.style.maxWidth = '500px';
+    modalContent.style.width = '100%';
+    modalContent.style.borderRadius = '20px';
+    modalContent.style.overflow = 'hidden';
+    
+    document.body.style.overflow = 'hidden';
+    
+    console.log('Modal opened:', type, title, message);
+}
+
+function closeApplicationModal() {
+    const modal = document.getElementById('applicationModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
 // Form Submission Functions
 async function submitJobApplication(event, jobId) {
     event.preventDefault();
@@ -1039,15 +1105,15 @@ async function submitJobApplication(event, jobId) {
             const result = await response.json();
 
             if (result.success) {
-                showNotification('success', result.message || 'Application submitted successfully! We\'ll review your application and contact you soon.');
                 closeJobModal();
+                openApplicationModal('success', 'Application Submitted!', result.message || 'Thank you for your application. We\'ll review it and get back to you soon.');
             } else {
-                showNotification('error', result.message || 'Failed to submit application. Please try again.');
+                openApplicationModal('error', 'Application Failed', result.message || 'Failed to submit application. Please try again.');
             }
 
         } catch (error) {
             console.error('Error:', error);
-            showNotification('error', 'An error occurred. Please try again.');
+            openApplicationModal('error', 'Error', 'An error occurred. Please try again.');
         } finally {
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
@@ -1065,17 +1131,24 @@ async function submitQuickApply(event) {
     const formData = new FormData(event.target);
     
     try {
-        // Simulate API call
-        setTimeout(() => {
-            showNotification('success', 'Your resume has been received! We\'ll keep you in mind for future opportunities.');
+        const response = await fetch('<?php echo url('/api/job_applications.php'); ?>', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            openApplicationModal('success', 'Application Submitted!', 'Your resume has been received! We\'ll keep you in mind for future opportunities.');
             closeQuickApplyModal();
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-        }, 1500);
-        
+        } else {
+            openApplicationModal('error', 'Application Failed', result.message || 'Failed to submit application. Please try again.');
+        }
+
     } catch (error) {
         console.error('Error:', error);
-        showNotification('error', 'An error occurred. Please try again.');
+        openApplicationModal('error', 'Error', 'An error occurred. Please try again.');
+    } finally {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
     }
@@ -1141,12 +1214,16 @@ function showNotification(type, message) {
 window.onclick = function(event) {
     const jobModal = document.getElementById('jobModal');
     const quickApplyModal = document.getElementById('quickApplyModal');
+    const applicationModal = document.getElementById('applicationModal');
     
     if (event.target === jobModal) {
         closeJobModal();
     }
     if (event.target === quickApplyModal) {
         closeQuickApplyModal();
+    }
+    if (event.target === applicationModal) {
+        closeApplicationModal();
     }
 }
 
@@ -1155,6 +1232,7 @@ document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         closeJobModal();
         closeQuickApplyModal();
+        closeApplicationModal();
     }
 });
 

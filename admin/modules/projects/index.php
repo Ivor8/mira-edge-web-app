@@ -215,6 +215,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             error_log("Delete Project Error: " . $e->getMessage());
             $session->setFlash('error', 'Error deleting project.');
         }
+        
+        redirect(url('/admin/modules/projects/'));
     }
 }
 
@@ -619,13 +621,14 @@ $categories = $stmt->fetchAll();
             </div>
             <div class="modal-body">
                 <p>Are you sure you want to delete the project "<span id="projectToDelete"></span>"?</p>
-                <p class="text-warning"><i class="fas fa-exclamation-triangle"></i> This action cannot be undone!</p>
+                <p class="text-warning"><i class="fas fa-exclamation-triangle"></i> This action cannot be undone! All associated images and data will be permanently removed.</p>
             </div>
             <div class="modal-footer">
-                <form method="POST" action="" id="deleteForm">
-                    <input type="hidden" name="project_id" id="deleteProjectId">
+                <form method="POST" action="<?php echo url('/admin/modules/projects/'); ?>" id="deleteForm">
+                    <input type="hidden" name="project_id" id="deleteProjectId" value="">
+                    <input type="hidden" name="delete_project" value="1">
                     <button type="button" class="btn btn-outline modal-cancel">Cancel</button>
-                    <button type="submit" name="delete_project" class="btn btn-danger">
+                    <button type="submit" class="btn btn-danger">
                         <i class="fas fa-trash"></i> Delete Project
                     </button>
                 </form>
