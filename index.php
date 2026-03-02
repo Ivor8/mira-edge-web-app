@@ -55,6 +55,7 @@ $valid_pages = [
     'portfolio' => 'pages/portfolio.php',
     'blog' => 'pages/blog.php',
     'careers' => 'pages/careers.php',
+    'reviews' => 'pages/reviews.php',
     'contact' => 'pages/contact.php',
     'founder' => 'pages/founder.php',
     'login' => 'login.php',
@@ -68,6 +69,11 @@ $page_file = $valid_pages[$page] ?? 'pages/404.php';
 // Check for single post view (both old and new URL formats) - overrides default page file
 if ($page === 'blog' && (isset($_GET['post_id']) || (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])))) {
     $page_file = 'pages/single/post.php';
+}
+
+// Check for single service view - overrides default page file
+if ($page === 'service' && isset($_GET['service_id'])) {
+    $page_file = 'pages/single/service.php';
 }
 
 // If user is logged in and trying to access login/register, redirect
@@ -402,6 +408,7 @@ if ($session->isLoggedIn()) {
                         <li><a href="<?php echo url('/?page=services'); ?>" class="<?php echo $page === 'services' ? 'active' : ''; ?>">Services</a></li>
                         <li><a href="<?php echo url('/?page=portfolio'); ?>" class="<?php echo $page === 'portfolio' ? 'active' : ''; ?>">Portfolio</a></li>
                         <li><a href="<?php echo url('/?page=blog'); ?>" class="<?php echo $page === 'blog' ? 'active' : ''; ?>">Blog</a></li>
+                        <li><a href="<?php echo url('/?page=reviews'); ?>" class="<?php echo $page === 'reviews' ? 'active' : ''; ?>">Reviews</a></li>
                         <li><a href="<?php echo url('/?page=careers'); ?>" class="<?php echo $page === 'careers' ? 'active' : ''; ?>">Careers</a></li>
                         <li><a href="<?php echo url('/?page=contact'); ?>" class="<?php echo $page === 'contact' ? 'active' : ''; ?>">Contact</a></li>
                     </ul>

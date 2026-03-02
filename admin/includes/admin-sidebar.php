@@ -119,6 +119,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <a href="<?php echo url('admin/modules/website/menu.php'); ?>" class="nav-subitem">Menu</a>
                 <a href="<?php echo url('admin/modules/website/sliders.php'); ?>" class="nav-subitem">Sliders</a>
                 <a href="<?php echo url('admin/modules/website/testimonials.php'); ?>" class="nav-subitem">Testimonials</a>
+                <a href="<?php echo url('admin/modules/website/reviews.php'); ?>" class="nav-subitem">Reviews</a>
             </div>
         </div>
 

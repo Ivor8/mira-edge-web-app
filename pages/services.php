@@ -198,8 +198,7 @@ $canonical_url = isset($seo_meta['canonical_url']) && $seo_meta['canonical_url']
                 <div class="service-card animate-up" 
                      style="animation-delay: <?php echo $index * 0.1; ?>s;"
                      data-category="<?php echo e($categorySlug); ?>"
-                     data-service-id="<?php echo $service['service_id']; ?>"
-                     onclick="openServiceModal(<?php echo htmlspecialchars(json_encode($service), ENT_QUOTES, 'UTF-8'); ?>)">
+                     data-service-id="<?php echo $service['service_id']; ?>">
                     
                     <?php if (!empty($service['is_popular']) && $service['is_popular'] == 1): ?>
                     <span class="popular-badge">Popular</span>
@@ -234,9 +233,9 @@ $canonical_url = isset($seo_meta['canonical_url']) && $seo_meta['canonical_url']
                         </div>
                         
                         <div class="service-actions">
-                            <button class="btn btn-outline" onclick="event.stopPropagation(); openServiceModal(<?php echo htmlspecialchars(json_encode($service), ENT_QUOTES, 'UTF-8'); ?>)">
+                            <a href="<?php echo url('/?page=service&service_id=' . $service['service_id'] . '&slug=' . $service['slug']); ?>" class="btn btn-outline">
                                 <i class="fas fa-info-circle"></i> Details
-                            </button>
+                            </a>
                             <button class="btn" onclick="event.stopPropagation(); openOrderForm(<?php echo htmlspecialchars(json_encode($service), ENT_QUOTES, 'UTF-8'); ?>)">
                                 <i class="fas fa-shopping-cart"></i> Order Now
                             </button>
@@ -290,8 +289,7 @@ $canonical_url = isset($seo_meta['canonical_url']) && $seo_meta['canonical_url']
                 <div class="service-card animate-up <?php echo $service['is_popular'] ? 'featured' : ''; ?>" 
                      style="animation-delay: <?php echo $index * 0.1; ?>s;"
                      data-category="<?php echo strtolower(str_replace(' ', '-', $service['category_name'])); ?>"
-                     data-service-id="<?php echo $service['service_id']; ?>"
-                     onclick='openServiceModal(<?php echo json_encode($service); ?>)'>
+                     data-service-id="<?php echo $service['service_id']; ?>">
                     
                     <?php if ($service['is_popular']): ?>
                     <span class="popular-badge">Popular</span>
@@ -317,9 +315,9 @@ $canonical_url = isset($seo_meta['canonical_url']) && $seo_meta['canonical_url']
                         </div>
                         
                         <div class="service-actions">
-                            <button class="btn btn-outline" onclick="event.stopPropagation(); openServiceModal(<?php echo htmlspecialchars(json_encode($service), ENT_QUOTES, 'UTF-8'); ?>)">
+                            <a href="<?php echo url('/?page=service&service_id=' . $service['service_id'] . '&slug=' . strtolower(str_replace(' ', '-', $service['service_name']))); ?>" class="btn btn-outline">
                                 <i class="fas fa-info-circle"></i> Details
-                            </button>
+                            </a>
                             <button class="btn" onclick="event.stopPropagation(); openOrderForm(<?php echo htmlspecialchars(json_encode($service), ENT_QUOTES, 'UTF-8'); ?>)">
                                 <i class="fas fa-shopping-cart"></i> Order Now
                             </button>
